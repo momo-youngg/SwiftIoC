@@ -147,4 +147,34 @@ final class SwiftIoCTests: XCTestCase {
         throw XCTSkip("macros are only supported when running tests for the host platform")
         #endif
     }
+    
+    func test_component_macro_can_not_attach_on_variable_property() {
+        #if canImport(SwiftIoCMacros)
+        assertMacroExpansion(
+            #"""
+            final class TestClass {
+                @Component
+                var myProperty: Int
+            
+                init() {
+                    self.myProperty = 1
+                }
+            }
+            """#,
+            expandedSource: #"""
+            final class TestClass {
+                var myProperty: Int
+            
+                init() {
+                    self.myProperty = 1
+                }
+            }
+            """#,
+            diagnostics: [DiagnosticSpec(message: "@Component must be attached to stored property", line: 2, column: 5)],
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
 }
