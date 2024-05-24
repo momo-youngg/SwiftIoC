@@ -41,7 +41,7 @@ public struct ComponentMacro: AccessorMacro {
         public var message: String {
             switch self {
             case .notProperty:
-                return "@Component must be attached to stored property"
+                return "@Component must be attached to constant stored property"
             }
         }
         

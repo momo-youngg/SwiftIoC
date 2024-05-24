@@ -140,7 +140,7 @@ final class SwiftIoCTests: XCTestCase {
                 }
             }
             """#,
-            diagnostics: [DiagnosticSpec(message: "@Component must be attached to stored property", line: 2, column: 5)],
+            diagnostics: [DiagnosticSpec(message: "@Component must be attached to constant stored property", line: 2, column: 5)],
             macros: testMacros
         )
         #else
@@ -170,7 +170,7 @@ final class SwiftIoCTests: XCTestCase {
                 }
             }
             """#,
-            diagnostics: [DiagnosticSpec(message: "@Component must be attached to stored property", line: 2, column: 5)],
+            diagnostics: [DiagnosticSpec(message: "@Component must be attached to constant stored property", line: 2, column: 5)],
             macros: testMacros
         )
         #else
