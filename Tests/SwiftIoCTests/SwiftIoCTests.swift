@@ -45,4 +45,26 @@ final class SwiftIoCTests: XCTestCase {
         throw XCTSkip("macros are only supported when running tests for the host platform")
         #endif
     }
+    
+    func test_component_macro_does_not_add_any_accessors() {
+        #if canImport(SwiftIoCMacros)
+        assertMacroExpansion(
+            #"""
+            final class TestClass {
+                @Component
+                private let myProperty: Int = 1
+            }
+            """#,
+            expandedSource: #"""
+            final class TestClass {
+                @Component
+                private let myProperty: Int = 1
+            }
+            """#,
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
 }
