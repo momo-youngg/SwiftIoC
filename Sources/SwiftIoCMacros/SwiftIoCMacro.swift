@@ -29,5 +29,16 @@ public struct StringifyMacro: ExpressionMacro {
 struct SwiftIoCPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
         StringifyMacro.self,
+        ComponentMacro.self,
     ]
+}
+
+public struct ComponentMacro: AccessorMacro {
+    public static func expansion(
+        of node: SwiftSyntax.AttributeSyntax,
+        providingAccessorsOf declaration: some SwiftSyntax.DeclSyntaxProtocol,
+        in context: some SwiftSyntaxMacros.MacroExpansionContext
+    ) throws -> [SwiftSyntax.AccessorDeclSyntax] {
+        return []
+    }
 }
