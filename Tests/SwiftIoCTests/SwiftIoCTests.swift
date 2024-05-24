@@ -10,6 +10,7 @@ import SwiftIoCMacros
 
 let testMacros: [String: Macro.Type] = [
     "stringify": StringifyMacro.self,
+    "Component": ComponentMacro.self,
 ]
 #endif
 
@@ -29,7 +30,7 @@ final class SwiftIoCTests: XCTestCase {
         throw XCTSkip("macros are only supported when running tests for the host platform")
         #endif
     }
-
+    
     func testMacroWithStringLiteral() throws {
         #if canImport(SwiftIoCMacros)
         assertMacroExpansion(
@@ -57,7 +58,6 @@ final class SwiftIoCTests: XCTestCase {
             """#,
             expandedSource: #"""
             final class TestClass {
-                @Component
                 private let myProperty: Int = 1
             }
             """#,
@@ -81,7 +81,6 @@ final class SwiftIoCTests: XCTestCase {
             """#,
             expandedSource: #"""
             final class TestClass {
-                @Component
                 private let myProperty: Int = 1
             
                 private var otherProperty: Bool = false
@@ -109,7 +108,6 @@ final class SwiftIoCTests: XCTestCase {
             """#,
             expandedSource: #"""
             final class TestClass {
-                @Component
                 private let myProperty: Int = 1
             
                 private var otherProperty: Bool = false
