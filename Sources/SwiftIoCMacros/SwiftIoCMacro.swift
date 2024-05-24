@@ -30,18 +30,18 @@ public struct StringifyMacro: ExpressionMacro {
 struct SwiftIoCPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
         StringifyMacro.self,
-        ComponentMacro.self,
+        AutowiredMacro.self,
     ]
 }
 
-public struct ComponentMacro: AccessorMacro {
-    enum ComponentDiagnostic: DiagnosticMessage {
+public struct AutowiredMacro: AccessorMacro {
+    enum AutowiredDiagnostic: DiagnosticMessage {
         case notProperty
 
         public var message: String {
             switch self {
             case .notProperty:
-                return "@Component must be attached to constant stored property"
+                return "@Autowired must be attached to constant stored property"
             }
         }
         
@@ -64,7 +64,7 @@ public struct ComponentMacro: AccessorMacro {
     ) throws -> [SwiftSyntax.AccessorDeclSyntax] {
         guard let varDecl = declaration.as(VariableDeclSyntax.self),
                 varDecl.bindingSpecifier.tokenKind == .keyword(.let) else {
-            context.diagnose(Diagnostic(node: node, message: ComponentDiagnostic.notProperty))
+            context.diagnose(Diagnostic(node: node, message: AutowiredDiagnostic.notProperty))
             return []
         }
         return []

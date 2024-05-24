@@ -10,7 +10,7 @@ import SwiftIoCMacros
 
 let testMacros: [String: Macro.Type] = [
     "stringify": StringifyMacro.self,
-    "Component": ComponentMacro.self,
+    "Autowired": AutowiredMacro.self,
 ]
 #endif
 
@@ -47,12 +47,12 @@ final class SwiftIoCTests: XCTestCase {
         #endif
     }
     
-    func test_component_macro_does_not_add_any_accessors() {
+    func test_autowired_macro_does_not_add_any_accessors() {
         #if canImport(SwiftIoCMacros)
         assertMacroExpansion(
             #"""
             final class TestClass {
-                @Component
+                @Autowired
                 private let myProperty: Int = 1
             }
             """#,
@@ -68,12 +68,12 @@ final class SwiftIoCTests: XCTestCase {
         #endif
     }
     
-    func test_component_macro_can_use_with_other_property() {
+    func test_autowired_macro_can_use_with_other_property() {
         #if canImport(SwiftIoCMacros)
         assertMacroExpansion(
             #"""
             final class TestClass {
-                @Component
+                @Autowired
                 private let myProperty: Int = 1
             
                 private var otherProperty: Bool = false
@@ -93,12 +93,12 @@ final class SwiftIoCTests: XCTestCase {
         #endif
     }
     
-    func test_component_macro_can_use_in_type_which_has_initializer() {
+    func test_autowired_macro_can_use_in_type_which_has_initializer() {
         #if canImport(SwiftIoCMacros)
         assertMacroExpansion(
             #"""
             final class TestClass {
-                @Component
+                @Autowired
                 private let myProperty: Int = 1
             
                 private var otherProperty: Bool = false
@@ -122,12 +122,12 @@ final class SwiftIoCTests: XCTestCase {
         #endif
     }
     
-    func test_component_macro_can_not_attach_on_computed_property() {
+    func test_autowired_macro_can_not_attach_on_computed_property() {
         #if canImport(SwiftIoCMacros)
         assertMacroExpansion(
             #"""
             final class TestClass {
-                @Component
+                @Autowired
                 var myProperty: Int {
                     return 1
                 }
@@ -140,7 +140,7 @@ final class SwiftIoCTests: XCTestCase {
                 }
             }
             """#,
-            diagnostics: [DiagnosticSpec(message: "@Component must be attached to constant stored property", line: 2, column: 5)],
+            diagnostics: [DiagnosticSpec(message: "@Autowired must be attached to constant stored property", line: 2, column: 5)],
             macros: testMacros
         )
         #else
@@ -148,12 +148,12 @@ final class SwiftIoCTests: XCTestCase {
         #endif
     }
     
-    func test_component_macro_can_not_attach_on_variable_property() {
+    func test_autowired_macro_can_not_attach_on_variable_property() {
         #if canImport(SwiftIoCMacros)
         assertMacroExpansion(
             #"""
             final class TestClass {
-                @Component
+                @Autowired
                 var myProperty: Int
             
                 init() {
@@ -170,7 +170,7 @@ final class SwiftIoCTests: XCTestCase {
                 }
             }
             """#,
-            diagnostics: [DiagnosticSpec(message: "@Component must be attached to constant stored property", line: 2, column: 5)],
+            diagnostics: [DiagnosticSpec(message: "@Autowired must be attached to constant stored property", line: 2, column: 5)],
             macros: testMacros
         )
         #else
