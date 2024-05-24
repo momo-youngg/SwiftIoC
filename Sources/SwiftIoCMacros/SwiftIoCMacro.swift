@@ -2,6 +2,7 @@ import SwiftCompilerPlugin
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
+import SwiftDiagnostics
 
 /// Implementation of the `stringify` macro, which takes an expression
 /// of any type and produces a tuple containing the value of that expression
@@ -34,11 +35,38 @@ struct SwiftIoCPlugin: CompilerPlugin {
 }
 
 public struct ComponentMacro: AccessorMacro {
+    enum ComponentDiagnostic: DiagnosticMessage {
+        case notProperty
+
+        public var message: String {
+            switch self {
+            case .notProperty:
+                return "@Component must be attached to stored property"
+            }
+        }
+        
+        public var diagnosticID: SwiftDiagnostics.MessageID {
+            MessageID(domain: String(describing: self), id: String(describing: self))
+        }
+        
+        public var severity: SwiftDiagnostics.DiagnosticSeverity {
+            switch self {
+            case .notProperty:
+                return .error
+            }
+        }
+    }
+    
     public static func expansion(
         of node: SwiftSyntax.AttributeSyntax,
         providingAccessorsOf declaration: some SwiftSyntax.DeclSyntaxProtocol,
         in context: some SwiftSyntaxMacros.MacroExpansionContext
     ) throws -> [SwiftSyntax.AccessorDeclSyntax] {
+        guard let varDecl = declaration.as(VariableDeclSyntax.self),
+                varDecl.bindingSpecifier.tokenKind == .keyword(.let) else {
+            context.diagnose(Diagnostic(node: node, message: ComponentDiagnostic.notProperty))
+            return []
+        }
         return []
     }
 }
