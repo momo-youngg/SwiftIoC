@@ -93,4 +93,34 @@ final class SwiftIoCTests: XCTestCase {
         throw XCTSkip("macros are only supported when running tests for the host platform")
         #endif
     }
+    
+    func test_component_macro_can_use_in_type_which_has_initializer() {
+        #if canImport(SwiftIoCMacros)
+        assertMacroExpansion(
+            #"""
+            final class TestClass {
+                @Component
+                private let myProperty: Int = 1
+            
+                private var otherProperty: Bool = false
+            
+                init() { }
+            }
+            """#,
+            expandedSource: #"""
+            final class TestClass {
+                @Component
+                private let myProperty: Int = 1
+            
+                private var otherProperty: Bool = false
+            
+                init() { }
+            }
+            """#,
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
 }
