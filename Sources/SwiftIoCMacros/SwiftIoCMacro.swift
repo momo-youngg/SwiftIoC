@@ -31,6 +31,7 @@ struct SwiftIoCPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
         StringifyMacro.self,
         AutowiredMacro.self,
+        ComponentMacro.self,
     ]
 }
 
@@ -67,6 +68,18 @@ public struct AutowiredMacro: AccessorMacro {
             context.diagnose(Diagnostic(node: node, message: AutowiredDiagnostic.notProperty))
             return []
         }
+        return []
+    }
+}
+
+public struct ComponentMacro: MemberMacro {
+    
+    public static func expansion(
+      of node: AttributeSyntax,
+      providingMembersOf declaration: some DeclGroupSyntax,
+      conformingTo protocols: [TypeSyntax],
+      in context: some MacroExpansionContext
+    ) throws -> [DeclSyntax] {
         return []
     }
 }

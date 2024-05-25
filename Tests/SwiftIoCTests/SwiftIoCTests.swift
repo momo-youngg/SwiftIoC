@@ -11,6 +11,7 @@ import SwiftIoCMacros
 let testMacros: [String: Macro.Type] = [
     "stringify": StringifyMacro.self,
     "Autowired": AutowiredMacro.self,
+    "Component": ComponentMacro.self,
 ]
 #endif
 
@@ -171,6 +172,27 @@ final class SwiftIoCTests: XCTestCase {
             }
             """#,
             diagnostics: [DiagnosticSpec(message: "@Autowired must be attached to constant stored property", line: 2, column: 5)],
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
+    
+    func test_component_macro_can_attach_on_type_declaration() {
+        #if canImport(SwiftIoCMacros)
+        assertMacroExpansion(
+            #"""
+            @Component
+            final class TestClass {
+                init() { }
+            }
+            """#,
+            expandedSource: #"""
+            final class TestClass {
+                init() { }
+            }
+            """#,
             macros: testMacros
         )
         #else
