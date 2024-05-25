@@ -3,6 +3,7 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 import SwiftDiagnostics
+import SwiftParser
 
 /// Implementation of the `stringify` macro, which takes an expression
 /// of any type and produces a tuple containing the value of that expression
@@ -80,6 +81,14 @@ public struct ComponentMacro: MemberMacro {
       conformingTo protocols: [TypeSyntax],
       in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        return []
+        let initializer = Self.initializer()
+        return [initializer]
+    }
+    
+    private static func initializer() -> DeclSyntax {
+        return """
+        init() {
+        }
+        """
     }
 }

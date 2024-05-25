@@ -179,27 +179,6 @@ final class SwiftIoCTests: XCTestCase {
         #endif
     }
     
-    func test_component_macro_can_attach_on_type_declaration() {
-        #if canImport(SwiftIoCMacros)
-        assertMacroExpansion(
-            #"""
-            @Component
-            final class TestClass {
-                init() { }
-            }
-            """#,
-            expandedSource: #"""
-            final class TestClass {
-                init() { }
-            }
-            """#,
-            macros: testMacros
-        )
-        #else
-        throw XCTSkip("macros are only supported when running tests for the host platform")
-        #endif
-    }
-    
     func test_component_macro_attached_on_property_does_nothing() {
         #if canImport(SwiftIoCMacros)
         assertMacroExpansion(
@@ -216,6 +195,28 @@ final class SwiftIoCTests: XCTestCase {
                 private let myProperty = 1
             
                 init() { }
+            }
+            """#,
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
+    
+    func test_component_macro_attached_on_empty_property_type_generates_empty_initiaizer() {
+        #if canImport(SwiftIoCMacros)
+        assertMacroExpansion(
+            #"""
+            @Component
+            final class TestClass {
+            }
+            """#,
+            expandedSource: #"""
+            final class TestClass {
+            
+                init() {
+                }
             }
             """#,
             macros: testMacros
