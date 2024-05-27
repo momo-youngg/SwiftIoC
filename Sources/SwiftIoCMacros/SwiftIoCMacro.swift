@@ -103,7 +103,7 @@ public struct ComponentMacro: MemberMacro {
     
     private static func initializer() -> DeclSyntax {
         return """
-        init() {
+        public init() {
         }
         """
     }

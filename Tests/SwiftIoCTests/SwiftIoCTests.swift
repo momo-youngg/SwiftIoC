@@ -215,7 +215,7 @@ final class SwiftIoCTests: XCTestCase {
             expandedSource: #"""
             final class TestClass {
             
-                init() {
+                public init() {
                 }
             }
             """#,
