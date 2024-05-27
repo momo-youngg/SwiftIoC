@@ -81,8 +81,24 @@ public struct ComponentMacro: MemberMacro {
       conformingTo protocols: [TypeSyntax],
       in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        let initializer = Self.initializer()
-        return [initializer]
+        let emptyParameterInitializer = declaration
+            .memberBlock
+            .members
+            .compactMap { $0.decl.as(InitializerDeclSyntax.self) }.filter { initializerDeclaration in
+            guard let signature = initializerDeclaration.signature.as(FunctionSignatureSyntax.self),
+                  let parameterClause = signature.parameterClause.as(FunctionParameterClauseSyntax.self),
+                  let paramters = parameterClause.parameters.as(FunctionParameterListSyntax.self) else {
+                return false
+            }
+            let isParamtersEmpty = paramters.count == .zero
+            return isParamtersEmpty
+        }
+        if emptyParameterInitializer.isEmpty {
+            let initializer = Self.initializer()
+            return [initializer]
+        } else {
+            return []
+        }
     }
     
     private static func initializer() -> DeclSyntax {
