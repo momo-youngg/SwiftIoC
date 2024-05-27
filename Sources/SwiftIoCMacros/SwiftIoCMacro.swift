@@ -74,31 +74,74 @@ public struct AutowiredMacro: AccessorMacro {
 }
 
 public struct ComponentMacro: MemberMacro {
-    
+    enum ComponentDiagnostic: DiagnosticMessage {
+        case notPublicInit
+
+        public var message: String {
+            switch self {
+            case .notPublicInit:
+                return "The manually implemented parameterless initializer must be public."
+            }
+        }
+        
+        public var diagnosticID: SwiftDiagnostics.MessageID {
+            MessageID(domain: String(describing: self), id: String(describing: self))
+        }
+        
+        public var severity: SwiftDiagnostics.DiagnosticSeverity {
+            switch self {
+            case .notPublicInit:
+                return .error
+            }
+        }
+    }
+
     public static func expansion(
       of node: AttributeSyntax,
       providingMembersOf declaration: some DeclGroupSyntax,
       conformingTo protocols: [TypeSyntax],
       in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        let emptyParameterInitializer = declaration
-            .memberBlock
-            .members
-            .compactMap { $0.decl.as(InitializerDeclSyntax.self) }.filter { initializerDeclaration in
-            guard let signature = initializerDeclaration.signature.as(FunctionSignatureSyntax.self),
-                  let parameterClause = signature.parameterClause.as(FunctionParameterClauseSyntax.self),
-                  let paramters = parameterClause.parameters.as(FunctionParameterListSyntax.self) else {
-                return false
-            }
-            let isParamtersEmpty = paramters.count == .zero
-            return isParamtersEmpty
-        }
-        if emptyParameterInitializer.isEmpty {
-            let initializer = Self.initializer()
-            return [initializer]
-        } else {
+        guard let memberBlock = declaration.memberBlock.as(MemberBlockSyntax.self),
+              let memberList = memberBlock.members.as(MemberBlockItemListSyntax.self) else {
             return []
         }
+        let members = memberList.compactMap { $0.as(MemberBlockItemSyntax.self) }
+        let initializers = members.compactMap { $0.decl.as(InitializerDeclSyntax.self) }
+        let emptyParameterInitializer = initializers
+            .filter { initializerDeclaration in
+                guard let signature = initializerDeclaration.signature.as(FunctionSignatureSyntax.self),
+                      let parameterClause = signature.parameterClause.as(FunctionParameterClauseSyntax.self),
+                      let paramters = parameterClause.parameters.as(FunctionParameterListSyntax.self) else {
+                    return false
+                }
+                let isParamtersEmpty = paramters.count == .zero
+                return isParamtersEmpty
+            }
+        
+        guard emptyParameterInitializer.isEmpty == false else {
+            let initializer = Self.initializer()
+            return [initializer]
+        }
+        
+        let publicEmptyParameterInitializer = emptyParameterInitializer.filter { initializerDeclaration in
+            guard let modifiers = declaration.modifiers.as(DeclModifierListSyntax.self) else {
+                return false
+            }
+            let publicModifiers = modifiers
+                .compactMap { $0.as(DeclModifierSyntax.self) }
+                .filter { 
+                    return $0.name.tokenKind == .keyword(.public)
+                }
+            return publicModifiers.isEmpty == false
+        }
+        
+        guard publicEmptyParameterInitializer.isEmpty == false else {
+            context.diagnose(Diagnostic(node: node, message: ComponentDiagnostic.notPublicInit))
+            return []
+        }
+        
+        return []
     }
     
     private static func initializer() -> DeclSyntax {

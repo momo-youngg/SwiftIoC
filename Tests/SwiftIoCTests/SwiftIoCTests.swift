@@ -231,6 +231,31 @@ final class SwiftIoCTests: XCTestCase {
         assertMacroExpansion(
             #"""
             @Component
+            final public class TestClass {
+            
+                public init() {
+                }
+            }
+            """#,
+            expandedSource: #"""
+            final public class TestClass {
+            
+                public init() {
+                }
+            }
+            """#,
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
+    
+    func test_component_macro_attached_on_type_with_empty_initializer_which_is_not_public_makes_error_diagnostic() {
+        #if canImport(SwiftIoCMacros)
+        assertMacroExpansion(
+            #"""
+            @Component
             final class TestClass {
             
                 init() {
@@ -244,10 +269,12 @@ final class SwiftIoCTests: XCTestCase {
                 }
             }
             """#,
+            diagnostics: [DiagnosticSpec(message: "The manually implemented parameterless initializer must be public.", line: 1, column: 1)],
             macros: testMacros
         )
         #else
         throw XCTSkip("macros are only supported when running tests for the host platform")
         #endif
     }
+
 }
