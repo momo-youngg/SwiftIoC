@@ -13,5 +13,5 @@ public macro stringify<T>(_ value: T) -> (T, String) = #externalMacro(module: "S
 @attached(accessor)
 public macro Autowired() = #externalMacro(module: "SwiftIoCMacros", type: "AutowiredMacro")
 
-@attached(member, names: named(`init`))
+@attached(member, names: named(init))
 public macro Component() = #externalMacro(module: "SwiftIoCMacros", type: "ComponentMacro")
