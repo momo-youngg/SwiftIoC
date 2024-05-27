@@ -209,11 +209,11 @@ final class SwiftIoCTests: XCTestCase {
         assertMacroExpansion(
             #"""
             @Component
-            final class TestClass {
+            public final class TestClass {
             }
             """#,
             expandedSource: #"""
-            final class TestClass {
+            public final class TestClass {
             
                 public init() {
                 }
@@ -256,20 +256,40 @@ final class SwiftIoCTests: XCTestCase {
         assertMacroExpansion(
             #"""
             @Component
-            final class TestClass {
+            public final class TestClass {
             
                 init() {
                 }
             }
             """#,
             expandedSource: #"""
-            final class TestClass {
+            public final class TestClass {
             
                 init() {
                 }
             }
             """#,
             diagnostics: [DiagnosticSpec(message: "The manually implemented parameterless initializer must be public.", line: 1, column: 1)],
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
+
+    func test_component_macro_attached_on_type_which_is_not_public_makes_error_diagnostic() {
+        #if canImport(SwiftIoCMacros)
+        assertMacroExpansion(
+            #"""
+            @Component
+            final class TestClass {
+            }
+            """#,
+            expandedSource: #"""
+            final class TestClass {
+            }
+            """#,
+            diagnostics: [DiagnosticSpec(message: "@Component must be attached on public modifier.", line: 1, column: 1)],
             macros: testMacros
         )
         #else

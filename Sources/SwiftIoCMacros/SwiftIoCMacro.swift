@@ -76,11 +76,14 @@ public struct AutowiredMacro: AccessorMacro {
 public struct ComponentMacro: MemberMacro {
     enum ComponentDiagnostic: DiagnosticMessage {
         case notPublicInit
+        case notPublicType
 
         public var message: String {
             switch self {
             case .notPublicInit:
                 return "The manually implemented parameterless initializer must be public."
+            case .notPublicType:
+                return "@Component must be attached on public modifier."
             }
         }
         
@@ -90,7 +93,7 @@ public struct ComponentMacro: MemberMacro {
         
         public var severity: SwiftDiagnostics.DiagnosticSeverity {
             switch self {
-            case .notPublicInit:
+            case .notPublicInit, .notPublicType:
                 return .error
             }
         }
@@ -102,6 +105,15 @@ public struct ComponentMacro: MemberMacro {
       conformingTo protocols: [TypeSyntax],
       in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
+        guard let typeModifiers = declaration.modifiers.as(DeclModifierListSyntax.self) else {
+            return []
+        }
+        let publicTypeModifiers = typeModifiers.filter { $0.name.tokenKind == .keyword(.public) }
+        guard publicTypeModifiers.isEmpty == false else {
+            context.diagnose(Diagnostic(node: node, message: ComponentDiagnostic.notPublicType))
+            return []
+        }
+        
         guard let memberBlock = declaration.memberBlock.as(MemberBlockSyntax.self),
               let memberList = memberBlock.members.as(MemberBlockItemListSyntax.self) else {
             return []
@@ -125,7 +137,7 @@ public struct ComponentMacro: MemberMacro {
         }
         
         let publicEmptyParameterInitializer = emptyParameterInitializer.filter { initializerDeclaration in
-            guard let modifiers = declaration.modifiers.as(DeclModifierListSyntax.self) else {
+            guard let modifiers = initializerDeclaration.modifiers.as(DeclModifierListSyntax.self) else {
                 return false
             }
             let publicModifiers = modifiers
