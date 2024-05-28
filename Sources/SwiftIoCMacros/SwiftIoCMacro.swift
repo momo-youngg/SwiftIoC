@@ -73,13 +73,13 @@ public struct AutowiredMacro: AccessorMacro {
     }
 }
 
-public struct ComponentMacro: MemberMacro, ExtensionMacro {
+public struct ComponentMacro {
     enum ComponentDiagnostic: DiagnosticMessage {
         case notPublicInit
         case notPublicType
         case notClassOrStruct
         case requiredModifierRequired
-
+        
         public var message: String {
             switch self {
             case .notPublicInit:
@@ -104,12 +104,14 @@ public struct ComponentMacro: MemberMacro, ExtensionMacro {
             }
         }
     }
+}
 
+extension ComponentMacro: MemberMacro {
     public static func expansion(
-      of node: AttributeSyntax,
-      providingMembersOf declaration: some DeclGroupSyntax,
-      conformingTo protocols: [TypeSyntax],
-      in context: some MacroExpansionContext
+        of node: AttributeSyntax,
+        providingMembersOf declaration: some DeclGroupSyntax,
+        conformingTo protocols: [TypeSyntax],
+        in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
         guard declaration.as(ClassDeclSyntax.self) != nil || declaration.as(StructDeclSyntax.self) != nil else {
             context.diagnose(Diagnostic(node: node, message: ComponentDiagnostic.notClassOrStruct))
@@ -161,12 +163,12 @@ public struct ComponentMacro: MemberMacro, ExtensionMacro {
             }
             let publicModifiers = modifiers
                 .compactMap { $0.as(DeclModifierSyntax.self) }
-                .filter { 
+                .filter {
                     return $0.name.tokenKind == .keyword(.public)
                 }
             return publicModifiers.isEmpty == false
         }
-                
+        
         guard publicEmptyParameterInitializer.isEmpty == false else {
             context.diagnose(Diagnostic(node: node, message: ComponentDiagnostic.notPublicInit))
             return []
@@ -206,7 +208,9 @@ public struct ComponentMacro: MemberMacro, ExtensionMacro {
         }
         """
     }
-    
+}
+
+extension ComponentMacro: ExtensionMacro {
     public static func expansion(
         of node: SwiftSyntax.AttributeSyntax,
         attachedTo declaration: some SwiftSyntax.DeclGroupSyntax,
