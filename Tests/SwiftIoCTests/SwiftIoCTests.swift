@@ -356,7 +356,7 @@ final class SwiftIoCTests: XCTestCase {
             extension TestClass: Componentable {
             }
             """#,
-            diagnostics: [DiagnosticSpec(message: "The manually implemented parameterless initializer must be public.", line: 1, column: 1)],
+            diagnostics: [DiagnosticSpec(message: "When using the @Component macro, if you implement the init() initializer, it must be public.", line: 1, column: 1)],
             macros: testMacros
         )
         #else

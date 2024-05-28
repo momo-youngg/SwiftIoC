@@ -83,7 +83,7 @@ public struct ComponentMacro: MemberMacro, ExtensionMacro {
         public var message: String {
             switch self {
             case .notPublicInit:
-                return "The manually implemented parameterless initializer must be public."
+                return "When using the @Component macro, if you implement the init() initializer, it must be public."
             case .notPublicType:
                 return "@Component must be attached on public modifier."
             case .notClassOrStruct:
