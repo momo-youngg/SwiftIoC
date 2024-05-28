@@ -78,6 +78,7 @@ public struct ComponentMacro: MemberMacro, ExtensionMacro {
         case notPublicInit
         case notPublicType
         case notClassOrStruct
+        case requiredModifierRequired
 
         public var message: String {
             switch self {
@@ -87,6 +88,8 @@ public struct ComponentMacro: MemberMacro, ExtensionMacro {
                 return "@Component must be attached on public modifier."
             case .notClassOrStruct:
                 return "@Component can attached on class or struct only."
+            case .requiredModifierRequired:
+                return "When using the @Component macro, if you implement the init() initializer in a non-final class, it must be required."
             }
         }
         
@@ -96,7 +99,7 @@ public struct ComponentMacro: MemberMacro, ExtensionMacro {
         
         public var severity: SwiftDiagnostics.DiagnosticSeverity {
             switch self {
-            case .notPublicInit, .notPublicType, .notClassOrStruct:
+            case .notPublicInit, .notPublicType, .notClassOrStruct, .requiredModifierRequired:
                 return .error
             }
         }
@@ -167,6 +170,24 @@ public struct ComponentMacro: MemberMacro, ExtensionMacro {
         guard publicEmptyParameterInitializer.isEmpty == false else {
             context.diagnose(Diagnostic(node: node, message: ComponentDiagnostic.notPublicInit))
             return []
+        }
+        
+        if isNonFinalClass {
+            let requiredInitializer = publicEmptyParameterInitializer.filter { initializerDeclaration in
+                guard let modifiers = initializerDeclaration.modifiers.as(DeclModifierListSyntax.self) else {
+                    return false
+                }
+                let requiredModifiers = modifiers
+                    .compactMap { $0.as(DeclModifierSyntax.self) }
+                    .filter {
+                        return $0.name.tokenKind == .keyword(.required)
+                    }
+                return requiredModifiers.isEmpty == false
+            }
+            if requiredInitializer.isEmpty {
+                context.diagnose(Diagnostic(node: node, message: ComponentDiagnostic.requiredModifierRequired))
+                return []
+            }
         }
         
         return []

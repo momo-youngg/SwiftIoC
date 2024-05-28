@@ -409,4 +409,33 @@ final class SwiftIoCTests: XCTestCase {
         throw XCTSkip("macros are only supported when running tests for the host platform")
         #endif
     }
+    
+    func test_component_macro_attached_on_non_final_class_generates_required_initializer() {
+        #if canImport(SwiftIoCMacros)
+        assertMacroExpansion(
+            #"""
+            @Component
+            public class TestClass {
+            
+                public init() {
+                }
+            }
+            """#,
+            expandedSource: #"""
+            public class TestClass {
+            
+                public init() {
+                }
+            }
+            
+            extension TestClass: Componentable {
+            }
+            """#,
+            diagnostics: [DiagnosticSpec(message: "When using the @Component macro, if you implement the init() initializer in a non-final class, it must be required.", line: 1, column: 1)],
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
 }
