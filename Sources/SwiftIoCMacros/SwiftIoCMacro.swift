@@ -73,7 +73,7 @@ public struct AutowiredMacro: AccessorMacro {
     }
 }
 
-public struct ComponentMacro: MemberMacro {
+public struct ComponentMacro: MemberMacro, ExtensionMacro {
     enum ComponentDiagnostic: DiagnosticMessage {
         case notPublicInit
         case notPublicType
@@ -159,6 +159,26 @@ public struct ComponentMacro: MemberMacro {
     private static func initializer() -> DeclSyntax {
         return """
         public init() {
+        }
+        """
+    }
+    
+    public static func expansion(
+        of node: SwiftSyntax.AttributeSyntax,
+        attachedTo declaration: some SwiftSyntax.DeclGroupSyntax,
+        providingExtensionsOf type: some SwiftSyntax.TypeSyntaxProtocol,
+        conformingTo protocols: [SwiftSyntax.TypeSyntax],
+        in context: some SwiftSyntaxMacros.MacroExpansionContext
+    ) throws -> [SwiftSyntax.ExtensionDeclSyntax] {
+        guard let extensionDeclSyntax = conformance(providingExtensionsOf: type).as(ExtensionDeclSyntax.self) else {
+            return []
+        }
+        return [extensionDeclSyntax]
+    }
+
+    private static func conformance(providingExtensionsOf type: some SwiftSyntax.TypeSyntaxProtocol) -> DeclSyntax {
+        return """
+        extension \(type.trimmed): Componentable {
         }
         """
     }

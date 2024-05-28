@@ -204,7 +204,7 @@ final class SwiftIoCTests: XCTestCase {
         #endif
     }
     
-    func test_component_macro_attached_on_empty_property_type_generates_empty_initiaizer() {
+    func test_component_macro_attached_on_empty_property_type_generates_empty_initiaizer_and_protocol_conformance() {
         #if canImport(SwiftIoCMacros)
         assertMacroExpansion(
             #"""
@@ -218,6 +218,9 @@ final class SwiftIoCTests: XCTestCase {
                 public init() {
                 }
             }
+            
+            extension TestClass: Componentable {
+            }
             """#,
             macros: testMacros
         )
@@ -226,7 +229,7 @@ final class SwiftIoCTests: XCTestCase {
         #endif
     }
     
-    func test_component_macro_attached_on_type_with_empty_initializer_does_nothing() {
+    func test_component_macro_attached_on_type_with_empty_initializer_generates_protocol_conformance_only() {
         #if canImport(SwiftIoCMacros)
         assertMacroExpansion(
             #"""
@@ -243,6 +246,9 @@ final class SwiftIoCTests: XCTestCase {
                 public init() {
                 }
             }
+            
+            extension TestClass: Componentable {
+            }
             """#,
             macros: testMacros
         )
@@ -251,7 +257,7 @@ final class SwiftIoCTests: XCTestCase {
         #endif
     }
     
-    func test_component_macro_attached_on_type_with_final_empty_initializer_does_nothing() {
+    func test_component_macro_attached_on_type_with_final_empty_initializer_generates_protocol_conformance_only() {
         #if canImport(SwiftIoCMacros)
         assertMacroExpansion(
             #"""
@@ -267,6 +273,9 @@ final class SwiftIoCTests: XCTestCase {
             
                 public final init() {
                 }
+            }
+            
+            extension TestClass: Componentable {
             }
             """#,
             macros: testMacros
@@ -293,6 +302,9 @@ final class SwiftIoCTests: XCTestCase {
                 init() {
                 }
             }
+            
+            extension TestClass: Componentable {
+            }
             """#,
             diagnostics: [DiagnosticSpec(message: "The manually implemented parameterless initializer must be public.", line: 1, column: 1)],
             macros: testMacros
@@ -312,6 +324,9 @@ final class SwiftIoCTests: XCTestCase {
             """#,
             expandedSource: #"""
             final class TestClass {
+            }
+            
+            extension TestClass: Componentable {
             }
             """#,
             diagnostics: [DiagnosticSpec(message: "@Component must be attached on public modifier.", line: 1, column: 1)],
