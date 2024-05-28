@@ -229,6 +229,31 @@ final class SwiftIoCTests: XCTestCase {
         #endif
     }
     
+    func test_component_macro_attached_on_empty_property_struct_generates_empty_initiaizer_and_protocol_conformance() {
+        #if canImport(SwiftIoCMacros)
+        assertMacroExpansion(
+            #"""
+            @Component
+            public struct TestStruct {
+            }
+            """#,
+            expandedSource: #"""
+            public struct TestStruct {
+            
+                public init() {
+                }
+            }
+            
+            extension TestStruct: Componentable {
+            }
+            """#,
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
+    
     func test_component_macro_attached_on_type_with_empty_initializer_generates_protocol_conformance_only() {
         #if canImport(SwiftIoCMacros)
         assertMacroExpansion(
