@@ -112,6 +112,15 @@ public struct ComponentMacro: MemberMacro, ExtensionMacro {
             context.diagnose(Diagnostic(node: node, message: ComponentDiagnostic.notClassOrStruct))
             return []
         }
+        let isNonFinalClass = {
+            guard let classDeclaration = declaration.as(ClassDeclSyntax.self),
+                  let modifiers = classDeclaration.modifiers.as(DeclModifierListSyntax.self) else {
+                return false
+            }
+            let finalKeywordModifier = modifiers.compactMap { $0.as(DeclModifierSyntax.self) }
+                .filter { $0.name.tokenKind == .keyword(.final) }
+            return finalKeywordModifier.isEmpty
+        }()
         guard let typeModifiers = declaration.modifiers.as(DeclModifierListSyntax.self) else {
             return []
         }
@@ -139,7 +148,7 @@ public struct ComponentMacro: MemberMacro, ExtensionMacro {
             }
         
         guard emptyParameterInitializer.isEmpty == false else {
-            let initializer = Self.initializer()
+            let initializer = isNonFinalClass ? Self.requiredInitializer() : Self.initializer()
             return [initializer]
         }
         
@@ -154,7 +163,7 @@ public struct ComponentMacro: MemberMacro, ExtensionMacro {
                 }
             return publicModifiers.isEmpty == false
         }
-        
+                
         guard publicEmptyParameterInitializer.isEmpty == false else {
             context.diagnose(Diagnostic(node: node, message: ComponentDiagnostic.notPublicInit))
             return []
@@ -166,6 +175,13 @@ public struct ComponentMacro: MemberMacro, ExtensionMacro {
     private static func initializer() -> DeclSyntax {
         return """
         public init() {
+        }
+        """
+    }
+    
+    private static func requiredInitializer() -> DeclSyntax {
+        return """
+        required public init() {
         }
         """
     }
