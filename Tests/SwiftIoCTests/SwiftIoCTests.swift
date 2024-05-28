@@ -337,4 +337,26 @@ final class SwiftIoCTests: XCTestCase {
         #endif
     }
 
+    func test_component_macro_attached_on_enum_makes_error_diagnostic() {
+        #if canImport(SwiftIoCMacros)
+        assertMacroExpansion(
+            #"""
+            @Component
+            enum TestEnum {
+            }
+            """#,
+            expandedSource: #"""
+            enum TestEnum {
+            }
+            
+            extension TestEnum: Componentable {
+            }
+            """#,
+            diagnostics: [DiagnosticSpec(message: "@Component can attached on class or struct only.", line: 1, column: 1)],
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
 }

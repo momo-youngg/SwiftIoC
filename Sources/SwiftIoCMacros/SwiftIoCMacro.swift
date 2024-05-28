@@ -77,6 +77,7 @@ public struct ComponentMacro: MemberMacro, ExtensionMacro {
     enum ComponentDiagnostic: DiagnosticMessage {
         case notPublicInit
         case notPublicType
+        case notClassOrStruct
 
         public var message: String {
             switch self {
@@ -84,6 +85,8 @@ public struct ComponentMacro: MemberMacro, ExtensionMacro {
                 return "The manually implemented parameterless initializer must be public."
             case .notPublicType:
                 return "@Component must be attached on public modifier."
+            case .notClassOrStruct:
+                return "@Component can attached on class or struct only."
             }
         }
         
@@ -93,7 +96,7 @@ public struct ComponentMacro: MemberMacro, ExtensionMacro {
         
         public var severity: SwiftDiagnostics.DiagnosticSeverity {
             switch self {
-            case .notPublicInit, .notPublicType:
+            case .notPublicInit, .notPublicType, .notClassOrStruct:
                 return .error
             }
         }
@@ -105,6 +108,10 @@ public struct ComponentMacro: MemberMacro, ExtensionMacro {
       conformingTo protocols: [TypeSyntax],
       in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
+        guard declaration.as(ClassDeclSyntax.self) != nil || declaration.as(StructDeclSyntax.self) != nil else {
+            context.diagnose(Diagnostic(node: node, message: ComponentDiagnostic.notClassOrStruct))
+            return []
+        }
         guard let typeModifiers = declaration.modifiers.as(DeclModifierListSyntax.self) else {
             return []
         }
