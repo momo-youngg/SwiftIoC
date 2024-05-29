@@ -148,7 +148,7 @@ extension AutowiredMacro: PeerMacro {
                                 return containerArgument
                             }
                         }
-                        return "DefaultDIContainer.shared"
+                        return "DIContainer.shared"
                     }()
                     
                     let newDeclaration: DeclSyntax = "private let _\(propertyName.trimmed): \(typeName.trimmed) = \(raw: containerArgument).resolve(\(typeName.trimmed).self)"
