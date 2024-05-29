@@ -36,39 +36,26 @@ struct SwiftIoCPlugin: CompilerPlugin {
     ]
 }
 
-public struct AutowiredMacro: AccessorMacro {
-    enum AutowiredDiagnostic: DiagnosticMessage {
-        case notProperty
-
-        public var message: String {
-            switch self {
-            case .notProperty:
-                return "@Autowired must be attached to constant stored property"
-            }
-        }
-        
-        public var diagnosticID: SwiftDiagnostics.MessageID {
-            MessageID(domain: String(describing: self), id: String(describing: self))
-        }
-        
-        public var severity: SwiftDiagnostics.DiagnosticSeverity {
-            switch self {
-            case .notProperty:
-                return .error
-            }
-        }
-    }
+public struct AutowiredMacro {
     
+}
+
+extension AutowiredMacro: AccessorMacro {
     public static func expansion(
         of node: SwiftSyntax.AttributeSyntax,
         providingAccessorsOf declaration: some SwiftSyntax.DeclSyntaxProtocol,
         in context: some SwiftSyntaxMacros.MacroExpansionContext
     ) throws -> [SwiftSyntax.AccessorDeclSyntax] {
-        guard let varDecl = declaration.as(VariableDeclSyntax.self),
-                varDecl.bindingSpecifier.tokenKind == .keyword(.let) else {
-            context.diagnose(Diagnostic(node: node, message: AutowiredDiagnostic.notProperty))
-            return []
-        }
+        return []
+    }
+}
+
+extension AutowiredMacro: PeerMacro {
+    public static func expansion(
+        of node: SwiftSyntax.AttributeSyntax,
+        providingPeersOf declaration: some SwiftSyntax.DeclSyntaxProtocol, 
+        in context: some SwiftSyntaxMacros.MacroExpansionContext
+    ) throws -> [SwiftSyntax.DeclSyntax] {
         return []
     }
 }

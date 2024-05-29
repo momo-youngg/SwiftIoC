@@ -11,7 +11,8 @@
 public macro stringify<T>(_ value: T) -> (T, String) = #externalMacro(module: "SwiftIoCMacros", type: "StringifyMacro")
 
 @attached(accessor)
-public macro Autowired() = #externalMacro(module: "SwiftIoCMacros", type: "AutowiredMacro")
+@attached(peer, names: prefixed(_))
+public macro Autowired(container: DIContainer) = #externalMacro(module: "SwiftIoCMacros", type: "AutowiredMacro")
 
 @attached(member, names: named(init))
 @attached(extension, conformances: Componentable)
@@ -19,4 +20,9 @@ public macro Component() = #externalMacro(module: "SwiftIoCMacros", type: "Compo
 
 public protocol Componentable {
     init()
+}
+
+public protocol DIContainer {
+    
+    func resolve<T: Componentable>(_ type: T) -> T
 }

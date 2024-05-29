@@ -24,4 +24,23 @@ final class AutowiredMactoTests: XCTestCase {
     ]
     #endif
     
+    func test_autowired_macro_attached_on_type_does_nothing() {
+        #if canImport(SwiftIoCMacros)
+        assertMacroExpansion(
+            #"""
+            @Autowired
+            final class TestClass {
+            }
+            """#,
+            expandedSource: #"""
+            final class TestClass {
+            }
+            """#,
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
+
 }
