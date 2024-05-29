@@ -100,5 +100,34 @@ final class AutowiredMactoTests: XCTestCase {
         throw XCTSkip("macros are only supported when running tests for the host platform")
         #endif
     }
-
+    
+    func test_autowired_macro_attached_on_property_which_is_computed_property_generates_diagnostic() {
+        #if canImport(SwiftIoCMacros)
+        assertMacroExpansion(
+            #"""
+            public final class TestClass {
+                @Autowired
+                private var someType: Int {
+                    get {
+                        return 1
+                    }
+                }
+            }
+            """#,
+            expandedSource: #"""
+            public final class TestClass {
+                private var someType: Int {
+                    get {
+                        return 1
+                    }
+                }
+            }
+            """#,
+            diagnostics: [DiagnosticSpec(message: "The property with @Autowired must stored property.", line: 2, column: 5)],
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
 }

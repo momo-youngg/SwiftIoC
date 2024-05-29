@@ -40,6 +40,7 @@ public struct AutowiredMacro {
     enum AutowiredDiagnostic: DiagnosticMessage {
         case notVariableProperty
         case alreadyInitialized
+        case storedProperty
         
         public var message: String {
             switch self {
@@ -47,6 +48,8 @@ public struct AutowiredMacro {
                 return "The property with @Autowired must be variable."
             case .alreadyInitialized:
                 return "The property with @Autowired must not be initialized"
+            case .storedProperty:
+                return "The property with @Autowired must stored property."
             }
         }
         
@@ -56,7 +59,7 @@ public struct AutowiredMacro {
         
         public var severity: SwiftDiagnostics.DiagnosticSeverity {
             switch self {
-            case .notVariableProperty, .alreadyInitialized:
+            case .notVariableProperty, .alreadyInitialized, .storedProperty:
                 return .error
             }
         }
@@ -86,6 +89,14 @@ extension AutowiredMacro: AccessorMacro {
                 }
             if equalBinding.isEmpty == false {
                 context.diagnose(Diagnostic(node: node, message: AutowiredDiagnostic.alreadyInitialized))
+                return []
+            }
+            
+            let accessorBlock = bindings
+                .compactMap { $0.as(PatternBindingSyntax.self) }
+                .compactMap { $0.accessorBlock }
+            if accessorBlock.isEmpty == false {
+                context.diagnose(Diagnostic(node: node, message: AutowiredDiagnostic.storedProperty))
                 return []
             }
         }
