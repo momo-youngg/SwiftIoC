@@ -303,7 +303,7 @@ extension ComponentMacro: ExtensionMacro {
         conformingTo protocols: [SwiftSyntax.TypeSyntax],
         in context: some SwiftSyntaxMacros.MacroExpansionContext
     ) throws -> [SwiftSyntax.ExtensionDeclSyntax] {
-        guard let classDeclaration = declaration.as(ClassDeclSyntax.self) else {
+        guard declaration.as(ClassDeclSyntax.self) != nil else {
             context.diagnose(Diagnostic(node: node, message: ComponentDiagnostic.notClass))
             return []
         }
