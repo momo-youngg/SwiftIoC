@@ -99,7 +99,7 @@ final class ComponentMacroTests: XCTestCase {
         #endif
     }
     
-    func test_component_macro_attached_on_empty_property_struct_generates_empty_initiaizer_and_protocol_conformance() {
+    func test_component_macro_attached_on__struct_makes_error_diagnostic() {
         #if canImport(SwiftIoCMacros)
         assertMacroExpansion(
             #"""
@@ -113,10 +113,8 @@ final class ComponentMacroTests: XCTestCase {
                 public init() {
                 }
             }
-            
-            extension TestStruct: Componentable {
-            }
             """#,
+            diagnostics: [DiagnosticSpec(message: "@Component can attached on class only.", line: 1, column: 1)],
             macros: testMacros
         )
         #else
@@ -209,17 +207,17 @@ final class ComponentMacroTests: XCTestCase {
         assertMacroExpansion(
             #"""
             @Component
-            enum TestEnum {
+            public enum TestEnum {
             }
             """#,
             expandedSource: #"""
-            enum TestEnum {
-            }
+            public enum TestEnum {
             
-            extension TestEnum: Componentable {
+                public init() {
+                }
             }
             """#,
-            diagnostics: [DiagnosticSpec(message: "@Component can attached on class or struct only.", line: 1, column: 1)],
+            diagnostics: [DiagnosticSpec(message: "@Component can attached on class only.", line: 1, column: 1)],
             macros: testMacros
         )
         #else

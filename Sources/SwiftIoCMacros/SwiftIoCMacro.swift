@@ -166,7 +166,7 @@ public struct ComponentMacro {
     enum ComponentDiagnostic: DiagnosticMessage {
         case notPublicInit
         case notPublicType
-        case notClassOrStruct
+        case notClass
         case requiredModifierRequired
         
         public var message: String {
@@ -175,8 +175,8 @@ public struct ComponentMacro {
                 return "When using the @Component macro, if you implement the init() initializer, it must be public."
             case .notPublicType:
                 return "@Component must be attached on public modifier."
-            case .notClassOrStruct:
-                return "@Component can attached on class or struct only."
+            case .notClass:
+                return "@Component can attached on class only."
             case .requiredModifierRequired:
                 return "When using the @Component macro, if you implement the init() initializer in a non-final class, it must be required."
             }
@@ -188,7 +188,7 @@ public struct ComponentMacro {
         
         public var severity: SwiftDiagnostics.DiagnosticSeverity {
             switch self {
-            case .notPublicInit, .notPublicType, .notClassOrStruct, .requiredModifierRequired:
+            case .notPublicInit, .notPublicType, .notClass, .requiredModifierRequired:
                 return .error
             }
         }
@@ -202,10 +202,6 @@ extension ComponentMacro: MemberMacro {
         conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        guard declaration.as(ClassDeclSyntax.self) != nil || declaration.as(StructDeclSyntax.self) != nil else {
-            context.diagnose(Diagnostic(node: node, message: ComponentDiagnostic.notClassOrStruct))
-            return []
-        }
         let isNonFinalClass = {
             guard let classDeclaration = declaration.as(ClassDeclSyntax.self),
                   let modifiers = classDeclaration.modifiers.as(DeclModifierListSyntax.self) else {
@@ -307,6 +303,10 @@ extension ComponentMacro: ExtensionMacro {
         conformingTo protocols: [SwiftSyntax.TypeSyntax],
         in context: some SwiftSyntaxMacros.MacroExpansionContext
     ) throws -> [SwiftSyntax.ExtensionDeclSyntax] {
+        guard let classDeclaration = declaration.as(ClassDeclSyntax.self) else {
+            context.diagnose(Diagnostic(node: node, message: ComponentDiagnostic.notClass))
+            return []
+        }
         guard let extensionDeclSyntax = conformance(providingExtensionsOf: type).as(ExtensionDeclSyntax.self) else {
             return []
         }
