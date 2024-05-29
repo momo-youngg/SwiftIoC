@@ -43,6 +43,7 @@ let package = Package(
         .testTarget(
             name: "SwiftIoCTests",
             dependencies: [
+                "SwiftIoC",
                 "SwiftIoCMacros",
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
             ]
