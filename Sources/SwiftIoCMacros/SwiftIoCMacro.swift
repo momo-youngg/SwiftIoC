@@ -39,11 +39,14 @@ struct SwiftIoCPlugin: CompilerPlugin {
 public struct AutowiredMacro {
     enum AutowiredDiagnostic: DiagnosticMessage {
         case notVariableProperty
+        case alreadyInitialized
         
         public var message: String {
             switch self {
             case .notVariableProperty:
                 return "The property with @Autowired must be variable."
+            case .alreadyInitialized:
+                return "The property with @Autowired must not be initialized"
             }
         }
         
@@ -53,7 +56,7 @@ public struct AutowiredMacro {
         
         public var severity: SwiftDiagnostics.DiagnosticSeverity {
             switch self {
-            case .notVariableProperty:
+            case .notVariableProperty, .alreadyInitialized:
                 return .error
             }
         }
@@ -72,7 +75,20 @@ extension AutowiredMacro: AccessorMacro {
             context.diagnose(Diagnostic(node: node, message: AutowiredDiagnostic.notVariableProperty))
             return []
         }
-
+        if let bindings = varDecl.bindings.as(PatternBindingListSyntax.self) {
+            let equalBinding = bindings.compactMap { $0.as(PatternBindingSyntax.self) }
+                .filter { patternBindingSyntax in
+                    if let initializer = patternBindingSyntax.initializer?.as(InitializerClauseSyntax.self), initializer.equal.tokenKind == .equal {
+                        return true
+                    } else {
+                        return false
+                    }
+                }
+            if equalBinding.isEmpty == false {
+                context.diagnose(Diagnostic(node: node, message: AutowiredDiagnostic.alreadyInitialized))
+                return []
+            }
+        }
         return []
     }
 }

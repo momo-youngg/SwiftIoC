@@ -72,4 +72,33 @@ final class AutowiredMactoTests: XCTestCase {
         throw XCTSkip("macros are only supported when running tests for the host platform")
         #endif
     }
+    
+    func test_autowired_macro_attached_on_property_which_is_initialized_generates_diagnostic() {
+        #if canImport(SwiftIoCMacros)
+        assertMacroExpansion(
+            #"""
+            public final class TestClass {
+                @Autowired
+                private var someType: Int = 1
+            
+                public init() {
+                }
+            }
+            """#,
+            expandedSource: #"""
+            public final class TestClass {
+                private var someType: Int = 1
+            
+                public init() {
+                }
+            }
+            """#,
+            diagnostics: [DiagnosticSpec(message: "The property with @Autowired must not be initialized", line: 2, column: 5)],
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
+
 }
