@@ -15,8 +15,8 @@ final class DefaultDIContainerTests: XCTestCase {
         let normalProperty: Int = 1
     }
 
-    func test_DefaultDIContainer_returns_proper_instance() {
-        let sut: DIContainer = DefaultDIContainer.shared
+    func test_DIContainer_returns_proper_instance() {
+        let sut: DIContainer = DIContainer.shared
         
         let actual: Componentable = sut.resolve(NoDependencyClass.self)
         
