@@ -126,7 +126,7 @@ extension AutowiredMacro: PeerMacro {
                 .compactMap({ $0.as(PatternBindingSyntax.self) })
                 .map({ $0.pattern })
                 .compactMap({ $0.as(IdentifierPatternSyntax.self) })
-                .map({ $0.identifier.text }).first {
+                .map({ $0.identifier }).first {
                 
                 if let typeName = bindings
                     .compactMap({ $0.as(PatternBindingSyntax.self) })
@@ -134,7 +134,7 @@ extension AutowiredMacro: PeerMacro {
                     .compactMap({ $0.as(TypeAnnotationSyntax.self) })
                     .map({ $0.type })
                     .compactMap({ $0.as(IdentifierTypeSyntax.self) })
-                    .map({ $0.name.text })
+                    .map({ $0.name })
                     .first {
                     
                     let containerArgument: String = {
@@ -151,7 +151,7 @@ extension AutowiredMacro: PeerMacro {
                         return "DefaultDIContainer.shared"
                     }()
                     
-                    let newDeclaration: DeclSyntax = "private let _\(raw: propertyName): \(raw: typeName) = \(raw: containerArgument).resolve(\(raw: typeName).self)"
+                    let newDeclaration: DeclSyntax = "private let _\(propertyName.trimmed): \(typeName.trimmed) = \(raw: containerArgument).resolve(\(typeName.trimmed).self)"
                     return [newDeclaration]
                 }
             }
