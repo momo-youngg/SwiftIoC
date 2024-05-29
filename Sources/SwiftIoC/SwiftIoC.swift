@@ -12,7 +12,7 @@ public macro stringify<T>(_ value: T) -> (T, String) = #externalMacro(module: "S
 
 @attached(accessor)
 @attached(peer, names: prefixed(_))
-public macro Autowired(container: DIContainer) = #externalMacro(module: "SwiftIoCMacros", type: "AutowiredMacro")
+public macro Autowired(container: DIContainer = DefaultDIContainer.shared) = #externalMacro(module: "SwiftIoCMacros", type: "AutowiredMacro")
 
 @attached(member, names: named(init))
 @attached(extension, conformances: Componentable)
@@ -25,4 +25,12 @@ public protocol Componentable {
 public protocol DIContainer {
     
     func resolve<T: Componentable>(_ type: T) -> T
+}
+
+public final class DefaultDIContainer: DIContainer {
+    public static let shared: DefaultDIContainer = .init()
+    
+    public func resolve<T>(_ type: T) -> T where T : Componentable {
+        return .init()
+    }
 }

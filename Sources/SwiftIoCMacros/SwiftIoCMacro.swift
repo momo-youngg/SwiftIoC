@@ -99,6 +99,17 @@ extension AutowiredMacro: AccessorMacro {
                 context.diagnose(Diagnostic(node: node, message: AutowiredDiagnostic.storedProperty))
                 return []
             }
+            
+            if let typeName = bindings
+                .compactMap({ $0.as(PatternBindingSyntax.self) })
+                .map({ $0.pattern })
+                .compactMap({ $0.as(IdentifierPatternSyntax.self) })
+                .map({ $0.identifier.text }).first {
+                let newExpr = AccessorDeclSyntax(accessorSpecifier: .keyword(.get)) {
+                    "self._\(raw: typeName)"
+                }
+                return [newExpr]
+            }
         }
         return []
     }
@@ -107,9 +118,40 @@ extension AutowiredMacro: AccessorMacro {
 extension AutowiredMacro: PeerMacro {
     public static func expansion(
         of node: SwiftSyntax.AttributeSyntax,
-        providingPeersOf declaration: some SwiftSyntax.DeclSyntaxProtocol, 
+        providingPeersOf declaration: some SwiftSyntax.DeclSyntaxProtocol,
         in context: some SwiftSyntaxMacros.MacroExpansionContext
     ) throws -> [SwiftSyntax.DeclSyntax] {
+        if let arguments = node.arguments?.as(LabeledExprListSyntax.self) {
+            if let containerArgument = arguments
+                .compactMap({ $0.as(LabeledExprSyntax.self) })
+                .filter({ $0.label?.text == "container" })
+                .compactMap({ $0.expression.as(MemberAccessExprSyntax.self) })
+                .map({ $0.description })
+                .first {
+                
+                if let bindings = declaration.as(VariableDeclSyntax.self)?.bindings.as(PatternBindingListSyntax.self) {
+                    if let propertyName = bindings
+                        .compactMap({ $0.as(PatternBindingSyntax.self) })
+                        .map({ $0.pattern })
+                        .compactMap({ $0.as(IdentifierPatternSyntax.self) })
+                        .map({ $0.identifier.text }).first {
+                        
+                        if let typeName = bindings
+                            .compactMap({ $0.as(PatternBindingSyntax.self) })
+                            .compactMap({ $0.typeAnnotation })
+                            .compactMap({ $0.as(TypeAnnotationSyntax.self) })
+                            .map({ $0.type })
+                            .compactMap({ $0.as(IdentifierTypeSyntax.self) })
+                            .map({ $0.name.text })
+                            .first {
+                            
+                            let newDeclaration: DeclSyntax = "private let _\(raw: propertyName): \(raw: typeName) = \(raw: containerArgument).resolve(\(raw: typeName).self)"
+                            return [newDeclaration]
+                        }
+                    }
+                }
+            }
+        }
         return []
     }
 }

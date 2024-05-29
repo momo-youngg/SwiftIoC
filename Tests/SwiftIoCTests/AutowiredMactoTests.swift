@@ -130,4 +130,36 @@ final class AutowiredMactoTests: XCTestCase {
         throw XCTSkip("macros are only supported when running tests for the host platform")
         #endif
     }
+    
+    func test_autowired_macro_generates_peer_property_and_get_accessor() {
+        #if canImport(SwiftIoCMacros)
+        assertMacroExpansion(
+            #"""
+            public final class TestClass {
+                @Autowired(container: DefaultDIContainer.shared)
+                private var someType: Int
+            
+                public init() { }
+            }
+            """#,
+            expandedSource: #"""
+            public final class TestClass {
+                private var someType: Int {
+                    get {
+                        self._someType
+                    }
+                }
+            
+                private let _someType: Int = DefaultDIContainer.shared.resolve(Int.self)
+            
+                public init() { }
+            }
+            """#,
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
+
 }
