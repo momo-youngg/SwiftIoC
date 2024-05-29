@@ -37,7 +37,28 @@ struct SwiftIoCPlugin: CompilerPlugin {
 }
 
 public struct AutowiredMacro {
-    
+    enum AutowiredDiagnostic: DiagnosticMessage {
+        case notVariableProperty
+        
+        public var message: String {
+            switch self {
+            case .notVariableProperty:
+                return "The property with @Autowired must be variable."
+            }
+        }
+        
+        public var diagnosticID: SwiftDiagnostics.MessageID {
+            MessageID(domain: String(describing: self), id: String(describing: self))
+        }
+        
+        public var severity: SwiftDiagnostics.DiagnosticSeverity {
+            switch self {
+            case .notVariableProperty:
+                return .error
+            }
+        }
+    }
+
 }
 
 extension AutowiredMacro: AccessorMacro {
@@ -46,6 +67,12 @@ extension AutowiredMacro: AccessorMacro {
         providingAccessorsOf declaration: some SwiftSyntax.DeclSyntaxProtocol,
         in context: some SwiftSyntaxMacros.MacroExpansionContext
     ) throws -> [SwiftSyntax.AccessorDeclSyntax] {
+        guard let varDecl = declaration.as(VariableDeclSyntax.self),
+              varDecl.bindingSpecifier.tokenKind == .keyword(.var) else {
+            context.diagnose(Diagnostic(node: node, message: AutowiredDiagnostic.notVariableProperty))
+            return []
+        }
+
         return []
     }
 }

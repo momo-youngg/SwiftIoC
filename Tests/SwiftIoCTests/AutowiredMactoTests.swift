@@ -43,4 +43,33 @@ final class AutowiredMactoTests: XCTestCase {
         #endif
     }
 
+    func test_autowired_macro_attached_on_let_property_generates_diagnostic() {
+        #if canImport(SwiftIoCMacros)
+        assertMacroExpansion(
+            #"""
+            public final class TestClass {
+                @Autowired
+                private let someType: Int
+            
+                public init() {
+                    self.someType = 1
+                }
+            }
+            """#,
+            expandedSource: #"""
+            public final class TestClass {
+                private let someType: Int
+            
+                public init() {
+                    self.someType = 1
+                }
+            }
+            """#,
+            diagnostics: [DiagnosticSpec(message: "The property with @Autowired must be variable.", line: 2, column: 5)],
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
 }
