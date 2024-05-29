@@ -23,14 +23,13 @@ public protocol Componentable {
 }
 
 public protocol DIContainer {
-    
-    func resolve<T: Componentable>(_ type: T) -> T
+    func resolve<T: Componentable>(_ type: T.Type) -> T
 }
 
 public final class DefaultDIContainer: DIContainer {
     public static let shared: DefaultDIContainer = .init()
     
-    public func resolve<T>(_ type: T) -> T where T : Componentable {
+    public func resolve<T>(_ type: T.Type) -> T where T : Componentable {
         return .init()
     }
 }
