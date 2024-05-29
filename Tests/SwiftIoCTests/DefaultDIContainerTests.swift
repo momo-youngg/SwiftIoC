@@ -20,6 +20,12 @@ final class DefaultDIContainerTests: XCTestCase {
         @Autowired
         var dependency: NoDependencyClass
     }
+    
+    @Component
+    public class SingleDependencyClass2 {
+        @Autowired
+        var dependency: NoDependencyClass
+    }
 
     func test_DIContainer_returns_proper_instance() {
         let sut: DIContainer = DIContainer.shared
@@ -36,5 +42,14 @@ final class DefaultDIContainerTests: XCTestCase {
         
         XCTAssert(actual is SingleDependencyClass)
         XCTAssert((actual as? SingleDependencyClass)?.dependency is NoDependencyClass)
+    }
+    
+    func test_DIContainer_resolve_with_same_instance_() {
+        let sut: DIContainer = DIContainer.shared
+        
+        let actual1 = sut.resolve(SingleDependencyClass.self)
+        let actual2 = sut.resolve(SingleDependencyClass2.self)
+        
+        XCTAssert(actual1.dependency === actual2.dependency)
     }
 }

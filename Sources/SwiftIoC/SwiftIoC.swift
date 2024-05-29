@@ -29,7 +29,15 @@ public protocol DependencyResolvable {
 public final class DIContainer: DependencyResolvable {
     public static let shared: DIContainer = .init()
     
+    private var cache: [String: Any] = [:]
+    
     public func resolve<T>(_ type: T.Type) -> T where T : Componentable {
-        return .init()
+        let key = String(describing: type)
+        if let saved = cache[key] {
+            return saved as! T
+        }
+        let newInsatance = T.init()
+        cache[key] = newInsatance
+        return newInsatance
     }
 }
