@@ -139,4 +139,39 @@ final class QualifierMacroTests: XCTestCase {
         #endif
     }
 
+    func test_qualifier_macro_attached_on_type_decliaration_generates_extension_conformance_and_attached_on_property_generates_get_accessor_with_qualifier_parameter() {
+        #if canImport(SwiftIoCMacros)
+        assertMacroExpansion(
+            #"""
+            @Qualifier("Test")
+            final class TestClass {
+                @Autowired
+                @Qualifier("Test2")
+                private var someType: Int
+
+                init() { }
+            }
+            """#,
+            expandedSource: #"""
+            final class TestClass {
+                private var someType: Int {
+                    get {
+                        DIContainer.shared.resolve(Int.self, qualifier: "Test2")
+                    }
+                }
+
+                init() { }
+            }
+            
+            extension TestClass: Qualifiable {
+                var qualifier: String = "Test"
+            }
+            """#,
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
+
 }
