@@ -97,4 +97,30 @@ final class DefaultDIContainerTests: XCTestCase {
             XCTFail()
         }
     }
+    
+    func test_DIContainer_resolve_same_instance_with_protocol_and_concrete_class_type_with_thread_safe() {
+        let iterateCount = 10000
+        var expectations: [XCTestExpectation] = []
+        
+        (0..<iterateCount).forEach { _ in
+            let exp = XCTestExpectation()
+            expectations.append(exp)
+            DispatchQueue.global().async {
+                let sut: DIContainer = DIContainer.shared
+                
+                let concreteClassBased = sut.resolve(SingleConcreteDependencyClass.self)
+                let protocolBased = sut.resolve(SingleDependencyClass3.self)
+                
+                if let dependency = protocolBased.dependency as? NoDependencyWithProtocolConformantClass {
+                    XCTAssertTrue(concreteClassBased.dependency === dependency)
+                    exp.fulfill()
+                } else {
+                    XCTFail()
+                    exp.fulfill()
+                }
+            }
+        }
+        
+        wait(for: expectations, timeout: 3.0)
+    }
 }

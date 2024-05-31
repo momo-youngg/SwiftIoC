@@ -33,20 +33,24 @@ public final class DIContainer: DependencyResolvable {
     private var cache: [String: Any] = [:]
     
     public func resolve<T>(_ type: T.Type) -> T {
-        let key = self.cacheKey(type)
-        if let cached = self.cache[key], let transformed = cached as? T {
-            return transformed
+        self.queue.sync {
+            let key = self.cacheKey(type)
+            if let cached = self.cache[key], let transformed = cached as? T {
+                return transformed
+            }
+            
+            let targets = self.allComponentableInstances.compactMap { $0 as? T }
+            
+            if let target = targets.first {
+                self.cache[key] = target
+                return target
+            }
+            
+            fatalError()
         }
-        
-        let targets = self.allComponentableInstances.compactMap { $0 as? T }
-        
-        if let target = targets.first {
-            self.cache[key] = target
-            return target
-        }
-        
-        fatalError()
     }
+    
+    private let queue = DispatchQueue(label: "DIContainer")
     
     private lazy var allComponentableInstances: [Componentable] = {
         let allClassesInTarget = self.getAllClassesInTarget()
