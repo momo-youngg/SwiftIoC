@@ -11,7 +11,6 @@
 public macro stringify<T>(_ value: T) -> (T, String) = #externalMacro(module: "SwiftIoCMacros", type: "StringifyMacro")
 
 @attached(accessor)
-@attached(peer, names: prefixed(_))
 public macro Autowired(container: DependencyResolvable = DIContainer.shared) = #externalMacro(module: "SwiftIoCMacros", type: "AutowiredMacro")
 
 @attached(member, names: named(init))

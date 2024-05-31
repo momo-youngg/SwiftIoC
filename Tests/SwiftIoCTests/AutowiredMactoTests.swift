@@ -60,8 +60,6 @@ final class AutowiredMactoTests: XCTestCase {
             public final class TestClass {
                 private let someType: Int
             
-                private let _someType: Int = DIContainer.shared.resolve(Int.self)
-            
                 public init() {
                     self.someType = 1
                 }
@@ -90,8 +88,6 @@ final class AutowiredMactoTests: XCTestCase {
             expandedSource: #"""
             public final class TestClass {
                 private var someType: Int = 1
-            
-                private let _someType: Int = DIContainer.shared.resolve(Int.self)
             
                 public init() {
                 }
@@ -125,8 +121,6 @@ final class AutowiredMactoTests: XCTestCase {
                         return 1
                     }
                 }
-            
-                private let _someType: Int = DIContainer.shared.resolve(Int.self)
             }
             """#,
             diagnostics: [DiagnosticSpec(message: "The property with @Autowired must stored property.", line: 2, column: 5)],
@@ -152,11 +146,9 @@ final class AutowiredMactoTests: XCTestCase {
             public final class TestClass {
                 private var someType: Int {
                     get {
-                        self._someType
+                        DefaultDIContainer.shared.resolve(Int.self)
                     }
                 }
-            
-                private let _someType: Int = DefaultDIContainer.shared.resolve(Int.self)
             
                 public init() { }
             }
@@ -183,11 +175,9 @@ final class AutowiredMactoTests: XCTestCase {
             public final class TestClass {
                 private var someType: Int {
                     get {
-                        self._someType
+                        DIContainer.shared.resolve(Int.self)
                     }
                 }
-            
-                private let _someType: Int = DIContainer.shared.resolve(Int.self)
             
                 public init() { }
             }
