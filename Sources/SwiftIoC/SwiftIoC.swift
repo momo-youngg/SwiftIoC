@@ -17,7 +17,7 @@ public macro Autowired(container: DependencyResolvable = DIContainer.shared) = #
 @attached(extension, conformances: Componentable)
 public macro Component() = #externalMacro(module: "SwiftIoCMacros", type: "ComponentMacro")
 
-public protocol Componentable {
+@objc public protocol Componentable {
     init()
 }
 
@@ -25,18 +25,54 @@ public protocol DependencyResolvable {
     func resolve<T: Componentable>(_ type: T.Type) -> T
 }
 
+import Foundation
+
 public final class DIContainer: DependencyResolvable {
     public static let shared: DIContainer = .init()
     
     private var cache: [String: Any] = [:]
     
-    public func resolve<T>(_ type: T.Type) -> T where T : Componentable {
-        let key = String(describing: type)
-        if let saved = cache[key] {
-            return saved as! T
+    public func resolve<T>(_ type: T.Type) -> T {
+        let key = self.cacheKey(type)
+        if let cached = self.cache[key], let transformed = cached as? T {
+            return transformed
         }
-        let newInsatance = T.init()
-        cache[key] = newInsatance
-        return newInsatance
+        
+        let allClassesInTarget = getAllClassesInTarget()
+        let componentables = allClassesInTarget
+            .filter { class_conformsToProtocol($0, Componentable.self) }
+            .compactMap { $0 as? Componentable.Type }
+        let initicated = componentables.map { $0.init() }
+        let targets = initicated.compactMap { $0 as? T }
+        
+        if let target = targets.first {
+            self.cache[key] = target
+            return target
+        }
+        
+        fatalError()
+    }
+    
+    private func cacheKey<T>(_ type: T.Type) -> String {
+        String(describing: type)
+    }
+    
+    private func getAllClassesInTarget() -> [AnyClass] {
+        let classCount = objc_getClassList(nil, 0)
+        guard classCount > 0 else {
+            return []
+        }
+
+        let allClasses = UnsafeMutablePointer<AnyClass>.allocate(capacity: Int(classCount))
+        defer { allClasses.deallocate() }
+
+        let releasingPointer = AutoreleasingUnsafeMutablePointer<AnyClass>(allClasses)
+        objc_getClassList(releasingPointer, classCount)
+
+        // 포인터에서 배열로 변환
+        let bufferPointer = UnsafeBufferPointer(start: allClasses, count: Int(classCount))
+        let array = Array(bufferPointer)
+        
+        return array
     }
 }

@@ -27,6 +27,21 @@ final class DefaultDIContainerTests: XCTestCase {
         var dependency: NoDependencyClass
     }
 
+    protocol TestProtocol {
+        var normalProperty: Int { get set }
+    }
+    
+    @Component
+    public class NoDependencyWithProtocolConformantClass: TestProtocol {
+        var normalProperty: Int = 10
+    }
+    
+    @Component
+    public class SingleDependencyClass3 {
+        @Autowired
+        var dependency: TestProtocol
+    }
+
     func test_DIContainer_returns_proper_instance() {
         let sut: DIContainer = DIContainer.shared
         
@@ -51,5 +66,16 @@ final class DefaultDIContainerTests: XCTestCase {
         let actual2 = sut.resolve(SingleDependencyClass2.self)
         
         XCTAssert(actual1.dependency === actual2.dependency)
+    }
+    
+    func test_DIContainer_resolve_works_with_protocol_type_property() {
+        let sut: DIContainer = DIContainer.shared
+        let expectedNormalProperty = Int.max
+        var dependency = sut.resolve(TestProtocol.self)
+        dependency.normalProperty = expectedNormalProperty
+        
+        let actual = sut.resolve(SingleDependencyClass3.self)
+        
+        XCTAssertEqual(actual.dependency.normalProperty, expectedNormalProperty)
     }
 }
