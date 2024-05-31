@@ -123,10 +123,29 @@ extension AutowiredMacro: AccessorMacro {
                 .compactMap({ $0.as(IdentifierTypeSyntax.self) })
                 .map({ $0.name })
                 .first {
-                let newExpr = AccessorDeclSyntax(accessorSpecifier: .keyword(.get)) {
-                    "\(raw: containerArgument).resolve(\(typeName.trimmed).self)"
+                
+                if let qualifier = varDecl
+                    .attributes
+                    .compactMap({ $0.as(AttributeSyntax.self) })
+                    .filter({ $0.attributeName.as(IdentifierTypeSyntax.self)?.name.text == "Qualifier" })
+                    .compactMap({ $0.arguments })
+                    .compactMap({ $0.as(LabeledExprListSyntax.self) })
+                    .flatMap({ $0 })
+                    .compactMap({ $0.as(LabeledExprSyntax.self) })
+                    .compactMap({ $0.expression.as(StringLiteralExprSyntax.self) })
+                    .flatMap({ $0.segments })
+                    .compactMap({ $0.as(StringSegmentSyntax.self) })
+                    .map({ $0.content.text }).first {
+                    let newExpr = AccessorDeclSyntax(accessorSpecifier: .keyword(.get)) {
+                        "\(raw: containerArgument).resolve(\(typeName.trimmed).self, qualifier: \"\(raw: qualifier)\")"
+                    }
+                    return [newExpr]
+                } else {
+                    let newExpr = AccessorDeclSyntax(accessorSpecifier: .keyword(.get)) {
+                        "\(raw: containerArgument).resolve(\(typeName.trimmed).self)"
+                    }
+                    return [newExpr]
                 }
-                return [newExpr]
             }
         }
         return []
