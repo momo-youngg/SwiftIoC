@@ -72,3 +72,7 @@ public final class DIContainer: DependencyResolvable {
         return array
     }
 }
+
+public protocol Qualifiable {
+    var qualifiable: String { get }
+}

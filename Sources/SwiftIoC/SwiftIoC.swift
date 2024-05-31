@@ -16,3 +16,6 @@ public macro Autowired(container: DependencyResolvable = DIContainer.shared) = #
 @attached(member, names: named(init))
 @attached(extension, conformances: Componentable)
 public macro Component() = #externalMacro(module: "SwiftIoCMacros", type: "ComponentMacro")
+
+@attached(extension, conformances: Qualifiable)
+public macro Qualifier(_ qualifier: String) = #externalMacro(module: "SwiftIoCMacros", type: "QualifierMacro")

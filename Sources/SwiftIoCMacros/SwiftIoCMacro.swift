@@ -33,6 +33,7 @@ struct SwiftIoCPlugin: CompilerPlugin {
         StringifyMacro.self,
         AutowiredMacro.self,
         ComponentMacro.self,
+        QualifierMacro.self,
     ]
 }
 
@@ -288,5 +289,18 @@ extension ComponentMacro: ExtensionMacro {
         extension \(type.trimmed): Componentable {
         }
         """
+    }
+}
+
+public struct QualifierMacro: ExtensionMacro {
+    public static func expansion(
+        of node: SwiftSyntax.AttributeSyntax,
+        attachedTo declaration: some SwiftSyntax.DeclGroupSyntax,
+        providingExtensionsOf type: some SwiftSyntax.TypeSyntaxProtocol,
+        conformingTo protocols: [SwiftSyntax.TypeSyntax],
+        in context: some SwiftSyntaxMacros.MacroExpansionContext
+    ) throws -> [SwiftSyntax.ExtensionDeclSyntax] {
+        
+        return []
     }
 }
