@@ -48,4 +48,33 @@ final class QualifierMacroTests: XCTestCase {
         throw XCTSkip("macros are only supported when running tests for the host platform")
         #endif
     }
+    
+    func test_qualifier_macro_attached_on_type_decliaration_generates_extension_conformance() {
+        #if canImport(SwiftIoCMacros)
+        assertMacroExpansion(
+            #"""
+            @Qualifier("Test")
+            final class TestClass {
+                private let myProperty = 1
+            
+                init() { }
+            }
+            """#,
+            expandedSource: #"""
+            final class TestClass {
+                private let myProperty = 1
+            
+                init() { }
+            }
+            
+            extension TestClass: Qualifiable {
+                var qualifier: String = "Test"
+            }
+            """#,
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
 }

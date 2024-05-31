@@ -300,7 +300,32 @@ public struct QualifierMacro: ExtensionMacro {
         conformingTo protocols: [SwiftSyntax.TypeSyntax],
         in context: some SwiftSyntaxMacros.MacroExpansionContext
     ) throws -> [SwiftSyntax.ExtensionDeclSyntax] {
+        guard let arguments = node.arguments?.as(LabeledExprListSyntax.self) else {
+            return []
+        }
         
-        return []
+        guard let qualifier = arguments
+            .compactMap({ $0.as(LabeledExprSyntax.self) })
+            .map({ $0.expression })
+            .compactMap({ $0.as(StringLiteralExprSyntax.self) })
+            .flatMap({ $0.segments })
+            .compactMap({ $0.as(StringSegmentSyntax.self) })
+            .map({ $0.content.text }).first else {
+            return []
+        }
+        
+        guard let extensionDeclSyntax = conformance(providingExtensionsOf: type, qualifier: qualifier).as(ExtensionDeclSyntax.self) else {
+            return []
+        }
+        
+        return [extensionDeclSyntax]
+    }
+    
+    private static func conformance(providingExtensionsOf type: some SwiftSyntax.TypeSyntaxProtocol, qualifier: String) -> DeclSyntax {
+        return """
+        extension \(type.trimmed): Qualifiable {
+            var qualifier: String = "\(raw: qualifier)"
+        }
+        """
     }
 }
