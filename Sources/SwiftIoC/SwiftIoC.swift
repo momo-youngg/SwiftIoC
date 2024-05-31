@@ -38,12 +38,7 @@ public final class DIContainer: DependencyResolvable {
             return transformed
         }
         
-        let allClassesInTarget = getAllClassesInTarget()
-        let componentables = allClassesInTarget
-            .filter { class_conformsToProtocol($0, Componentable.self) }
-            .compactMap { $0 as? Componentable.Type }
-        let initicated = componentables.map { $0.init() }
-        let targets = initicated.compactMap { $0 as? T }
+        let targets = self.allComponentableInstances.compactMap { $0 as? T }
         
         if let target = targets.first {
             self.cache[key] = target
@@ -52,6 +47,15 @@ public final class DIContainer: DependencyResolvable {
         
         fatalError()
     }
+    
+    private lazy var allComponentableInstances: [Componentable] = {
+        let allClassesInTarget = self.getAllClassesInTarget()
+        let componentables = allClassesInTarget
+            .filter { class_conformsToProtocol($0, Componentable.self) }
+            .compactMap { $0 as? Componentable.Type }
+        let initicated = componentables.map { $0.init() }
+        return initicated
+    }()
     
     private func cacheKey<T>(_ type: T.Type) -> String {
         String(describing: type)

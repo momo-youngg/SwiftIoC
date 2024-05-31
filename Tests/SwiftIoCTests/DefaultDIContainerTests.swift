@@ -41,6 +41,12 @@ final class DefaultDIContainerTests: XCTestCase {
         @Autowired
         var dependency: TestProtocol
     }
+    
+    @Component
+    public class SingleConcreteDependencyClass {
+        @Autowired
+        var  dependency: NoDependencyWithProtocolConformantClass
+    }
 
     func test_DIContainer_returns_proper_instance() {
         let sut: DIContainer = DIContainer.shared
@@ -77,5 +83,18 @@ final class DefaultDIContainerTests: XCTestCase {
         let actual = sut.resolve(SingleDependencyClass3.self)
         
         XCTAssertEqual(actual.dependency.normalProperty, expectedNormalProperty)
+    }
+    
+    func test_DIContainer_resolve_same_instance_with_protocol_and_concrete_class_type() {
+        let sut: DIContainer = DIContainer.shared
+        
+        let concreteClassBased = sut.resolve(SingleConcreteDependencyClass.self)
+        let protocolBased = sut.resolve(SingleDependencyClass3.self)
+        
+        if let dependency = protocolBased.dependency as? NoDependencyWithProtocolConformantClass {
+            XCTAssertTrue(concreteClassBased.dependency === dependency)
+        } else {
+            XCTFail()
+        }
     }
 }
