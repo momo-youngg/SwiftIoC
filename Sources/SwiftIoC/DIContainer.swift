@@ -7,14 +7,6 @@
 
 import Foundation
 
-@objc public protocol Componentable {
-    init()
-}
-
-public protocol DependencyResolvable {
-    func resolve<T: Componentable>(_ type: T.Type, qualifier: String?) -> T
-}
-
 public final class DIContainer: DependencyResolvable {
     public static let shared: DIContainer = .init()
     
@@ -27,8 +19,8 @@ public final class DIContainer: DependencyResolvable {
         let componentables = allClassesInTarget
             .filter { class_conformsToProtocol($0, Componentable.self) }
             .compactMap { $0 as? Componentable.Type }
-        let initicated = componentables.map { $0.init() }
-        return initicated
+        let initiated = componentables.map { $0.init() }
+        return initiated
     }()
 
     public func resolve<T>(_ type: T.Type, qualifier: String? = nil) -> T {
@@ -38,7 +30,7 @@ public final class DIContainer: DependencyResolvable {
                 return transformed
             }
             
-            let targets = self.allComponentableInstances
+            let satisfiedInstances = self.allComponentableInstances
                 .compactMap { $0 as? T }
                 .filter { candidate in
                     guard let qualifier = qualifier else {
@@ -50,11 +42,11 @@ public final class DIContainer: DependencyResolvable {
                     return qualifiable._qualifier == qualifier
                 }
             
-            if targets.count >= 2 {
+            if satisfiedInstances.count >= 2 {
                 fatalError(DIContainerError.moreThanTwoCandidateDependency.message)
             }
             
-            if let target = targets.first {
+            if let target = satisfiedInstances.first {
                 self.cache[key] = target
                 return target
             }
@@ -66,7 +58,7 @@ public final class DIContainer: DependencyResolvable {
 }
 
 extension DIContainer {
-    enum DIContainerError {
+    private enum DIContainerError {
         case moreThanTwoCandidateDependency
         case canNotFind
         
@@ -103,14 +95,9 @@ extension DIContainer {
         let releasingPointer = AutoreleasingUnsafeMutablePointer<AnyClass>(allClasses)
         objc_getClassList(releasingPointer, classCount)
 
-        // 포인터에서 배열로 변환
         let bufferPointer = UnsafeBufferPointer(start: allClasses, count: Int(classCount))
         let array = Array(bufferPointer)
         
         return array
     }
-}
-
-public protocol Qualifiable {
-    var _qualifier: String { get }
 }
