@@ -16,25 +16,21 @@ public protocol DependencyResolvable {
 }
 
 public final class DIContainer: DependencyResolvable {
-    
-    enum DIContainerError {
-        case moreThanTwoCandidateDependency
-        case canNotFind
-        
-        var message: String {
-            switch self {
-            case .moreThanTwoCandidateDependency:
-                return "There is more than 2 candidate dependency found. Use @Qualifier, @Qualified to distinguish which dependency to use."
-            case .canNotFind:
-                return "There is no dependency found."
-            }
-        }
-    }
-    
     public static let shared: DIContainer = .init()
     
     private var cache: [CacheKey: Any] = [:]
     
+    private let queue = DispatchQueue(label: "DIContainer")
+    
+    private lazy var allComponentableInstances: [Componentable] = {
+        let allClassesInTarget = self.getAllClassesInTarget()
+        let componentables = allClassesInTarget
+            .filter { class_conformsToProtocol($0, Componentable.self) }
+            .compactMap { $0 as? Componentable.Type }
+        let initicated = componentables.map { $0.init() }
+        return initicated
+    }()
+
     public func resolve<T>(_ type: T.Type, qualifier: String? = nil) -> T {
         self.queue.sync {
             let key = self.cacheKey(type, qualifier: qualifier)
@@ -67,16 +63,22 @@ public final class DIContainer: DependencyResolvable {
         }
     }
     
-    private let queue = DispatchQueue(label: "DIContainer")
-    
-    private lazy var allComponentableInstances: [Componentable] = {
-        let allClassesInTarget = self.getAllClassesInTarget()
-        let componentables = allClassesInTarget
-            .filter { class_conformsToProtocol($0, Componentable.self) }
-            .compactMap { $0 as? Componentable.Type }
-        let initicated = componentables.map { $0.init() }
-        return initicated
-    }()
+}
+
+extension DIContainer {
+    enum DIContainerError {
+        case moreThanTwoCandidateDependency
+        case canNotFind
+        
+        var message: String {
+            switch self {
+            case .moreThanTwoCandidateDependency:
+                return "There is more than 2 candidate dependency found. Use @Qualifier, @Qualified to distinguish which dependency to use."
+            case .canNotFind:
+                return "There is no dependency found."
+            }
+        }
+    }
     
     private struct CacheKey: Hashable {
         let type: String
