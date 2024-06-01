@@ -18,6 +18,8 @@ public struct QualifiedMacro: PeerMacro {
         providingPeersOf declaration: some SwiftSyntax.DeclSyntaxProtocol,
         in context: some SwiftSyntaxMacros.MacroExpansionContext
     ) throws -> [SwiftSyntax.DeclSyntax] {
+        // Qualified macro does not doing anything itself.
+        // Autowired macro uses qualified macro for get qualifier.
         return []
     }
 }
