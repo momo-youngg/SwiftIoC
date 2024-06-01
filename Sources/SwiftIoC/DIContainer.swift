@@ -22,7 +22,7 @@ public final class DIContainer: DependencyResolvable {
     
     public func resolve<T>(_ type: T.Type, qualifier: String? = nil) -> T {
         self.queue.sync {
-            let key = self.cacheKey(type)
+            let key = self.cacheKey(type, qualifier: qualifier)
             if let cached = self.cache[key], let transformed = cached as? T {
                 return transformed
             }

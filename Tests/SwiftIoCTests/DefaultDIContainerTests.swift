@@ -47,6 +47,36 @@ final class DefaultDIContainerTests: XCTestCase {
         @Autowired
         var  dependency: NoDependencyWithProtocolConformantClass
     }
+    
+    protocol MultiConformanceTestProtocol {
+        
+    }
+    
+    @Component
+    @Qualifier("first")
+    public class ConcreteClass1: MultiConformanceTestProtocol {
+        
+    }
+    
+    @Component
+    @Qualifier("second")
+    public class ConcreteClass2: MultiConformanceTestProtocol {
+        
+    }
+    
+    @Component
+    public class OuterClass1 {
+        @Autowired
+        @Qualified("first")
+        public var inner: MultiConformanceTestProtocol
+    }
+    
+    @Component
+    public class OuterClass2 {
+        @Autowired
+        @Qualified("second")
+        public var inner: MultiConformanceTestProtocol
+    }
 
     func test_DIContainer_returns_proper_instance() {
         let sut: DIContainer = DIContainer.shared
@@ -122,5 +152,15 @@ final class DefaultDIContainerTests: XCTestCase {
         }
         
         wait(for: expectations, timeout: 3.0)
+    }
+    
+    func test_DIContainer_can_distinguish_with_same_type() {
+        let sut: DIContainer = DIContainer.shared
+        
+        let first = sut.resolve(OuterClass1.self)
+        let second = sut.resolve(OuterClass2.self)
+        
+        XCTAssertTrue(first.inner is ConcreteClass1)
+        XCTAssertTrue(second.inner is ConcreteClass2)
     }
 }
