@@ -16,6 +16,21 @@ public protocol DependencyResolvable {
 }
 
 public final class DIContainer: DependencyResolvable {
+    
+    enum DIContainerError {
+        case moreThanTwoCandidateDependency
+        case canNotFind
+        
+        var message: String {
+            switch self {
+            case .moreThanTwoCandidateDependency:
+                return "There is more than 2 candidate dependency found. Use @Qualifier, @Qualified to distinguish which dependency to use."
+            case .canNotFind:
+                return "There is no dependency found."
+            }
+        }
+    }
+    
     public static let shared: DIContainer = .init()
     
     private var cache: [CacheKey: Any] = [:]
@@ -39,12 +54,16 @@ public final class DIContainer: DependencyResolvable {
                     return qualifiable._qualifier == qualifier
                 }
             
+            if targets.count >= 2 {
+                fatalError(DIContainerError.moreThanTwoCandidateDependency.message)
+            }
+            
             if let target = targets.first {
                 self.cache[key] = target
                 return target
             }
             
-            fatalError()
+            fatalError(DIContainerError.canNotFind.message)
         }
     }
     
