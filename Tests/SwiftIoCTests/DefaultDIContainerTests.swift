@@ -77,6 +77,12 @@ final class DefaultDIContainerTests: XCTestCase {
         @Qualified("second")
         public var inner: MultiConformanceTestProtocol
     }
+    
+    @Component
+    public class OuterClass3 {
+        @Autowired
+        public var outerClass2: SingleConcreteDependencyClass
+    }
 
     func test_DIContainer_returns_proper_instance() {
         let sut: DIContainer = DIContainer.shared
@@ -162,5 +168,16 @@ final class DefaultDIContainerTests: XCTestCase {
         
         XCTAssertTrue(first.inner is ConcreteClass1)
         XCTAssertTrue(second.inner is ConcreteClass2)
+    }
+    
+    func test_DIContainer_works_with_nested_dependency() {
+        let sut: DIContainer = DIContainer.shared
+        let expectedNormalProperty = Int.max
+        var dependency = sut.resolve(TestProtocol.self)
+        dependency.normalProperty = expectedNormalProperty
+        
+        let actual = sut.resolve(OuterClass3.self)
+        
+        XCTAssertEqual(actual.outerClass2.dependency.normalProperty, expectedNormalProperty)
     }
 }
