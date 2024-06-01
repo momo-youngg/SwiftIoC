@@ -94,9 +94,6 @@ public final class DIContainer: DependencyResolvable {
     
     private func getAllClassesInTarget() -> [AnyClass] {
         let classCount = objc_getClassList(nil, 0)
-        guard classCount > 0 else {
-            return []
-        }
 
         let allClasses = UnsafeMutablePointer<AnyClass>.allocate(capacity: Int(classCount))
         defer { allClasses.deallocate() }
