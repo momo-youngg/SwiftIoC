@@ -83,6 +83,18 @@ final class DefaultDIContainerTests: XCTestCase {
         @Autowired
         public var outerClass2: SingleConcreteDependencyClass
     }
+    
+    @Component
+    public class CircularDependencyClass1 {
+        @Autowired
+        public var other: CircularDependencyClass2
+    }
+    
+    @Component
+    public class CircularDependencyClass2 {
+        @Autowired
+        public var other: CircularDependencyClass1
+    }
 
     func test_DIContainer_returns_proper_instance() {
         let sut: DIContainer = DIContainer.shared
@@ -179,5 +191,15 @@ final class DefaultDIContainerTests: XCTestCase {
         let actual = sut.resolve(OuterClass3.self)
         
         XCTAssertEqual(actual.outerClass2.dependency.normalProperty, expectedNormalProperty)
+    }
+    
+    func test_DIContainer_works_with_circular_dependency() {
+        let sut: DIContainer = DIContainer.shared
+        
+        let first = sut.resolve(CircularDependencyClass1.self)
+        let second = sut.resolve(CircularDependencyClass2.self)
+        
+        XCTAssertTrue(first.other === second)
+        XCTAssertTrue(second.other === first)
     }
 }
