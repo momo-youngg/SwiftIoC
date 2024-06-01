@@ -34,6 +34,7 @@ struct SwiftIoCPlugin: CompilerPlugin {
         AutowiredMacro.self,
         ComponentMacro.self,
         QualifierMacro.self,
+        QualifiedMacro.self,
     ]
 }
 
@@ -127,7 +128,7 @@ extension AutowiredMacro: AccessorMacro {
                 if let qualifier = varDecl
                     .attributes
                     .compactMap({ $0.as(AttributeSyntax.self) })
-                    .filter({ $0.attributeName.as(IdentifierTypeSyntax.self)?.name.text == "Qualifier" })
+                    .filter({ $0.attributeName.as(IdentifierTypeSyntax.self)?.name.text == "Qualified" })
                     .compactMap({ $0.arguments })
                     .compactMap({ $0.as(LabeledExprListSyntax.self) })
                     .flatMap({ $0 })
@@ -319,6 +320,28 @@ public struct QualifierMacro: ExtensionMacro {
         conformingTo protocols: [SwiftSyntax.TypeSyntax],
         in context: some SwiftSyntaxMacros.MacroExpansionContext
     ) throws -> [SwiftSyntax.ExtensionDeclSyntax] {
+        guard let extensionDeclSyntax = conformance(providingExtensionsOf: type).as(ExtensionDeclSyntax.self) else {
+            return []
+        }
+        
+        return [extensionDeclSyntax]
+    }
+    
+    private static func conformance(providingExtensionsOf type: some SwiftSyntax.TypeSyntaxProtocol) -> DeclSyntax {
+        return """
+        extension \(type.trimmed): Qualifiable {
+        }
+        """
+    }
+}
+
+extension QualifierMacro: MemberMacro {
+    public static func expansion(
+        of node: AttributeSyntax,
+        providingMembersOf declaration: some DeclGroupSyntax,
+        conformingTo protocols: [TypeSyntax],
+        in context: some MacroExpansionContext
+    ) throws -> [DeclSyntax] {
         guard let arguments = node.arguments?.as(LabeledExprListSyntax.self) else {
             return []
         }
@@ -332,19 +355,23 @@ public struct QualifierMacro: ExtensionMacro {
             .map({ $0.content.text }).first else {
             return []
         }
-        
-        guard let extensionDeclSyntax = conformance(providingExtensionsOf: type, qualifier: qualifier).as(ExtensionDeclSyntax.self) else {
-            return []
-        }
-        
-        return [extensionDeclSyntax]
+
+        return [Self.qualifier(qualifier)]
     }
     
-    private static func conformance(providingExtensionsOf type: some SwiftSyntax.TypeSyntaxProtocol, qualifier: String) -> DeclSyntax {
+    private static func qualifier(_ qualifier: String) -> DeclSyntax {
         return """
-        extension \(type.trimmed): Qualifiable {
-            var qualifier: String = "\(raw: qualifier)"
-        }
+        public var _qualifier: String = "\(raw: qualifier)"
         """
+    }
+}
+
+public struct QualifiedMacro: PeerMacro {
+    public static func expansion(
+        of node: SwiftSyntax.AttributeSyntax,
+        providingPeersOf declaration: some SwiftSyntax.DeclSyntaxProtocol,
+        in context: some SwiftSyntaxMacros.MacroExpansionContext
+    ) throws -> [SwiftSyntax.DeclSyntax] {
+        return []
     }
 }

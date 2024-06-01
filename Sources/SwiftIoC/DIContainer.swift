@@ -12,22 +12,32 @@ import Foundation
 }
 
 public protocol DependencyResolvable {
-    func resolve<T: Componentable>(_ type: T.Type) -> T
+    func resolve<T: Componentable>(_ type: T.Type, qualifier: String?) -> T
 }
 
 public final class DIContainer: DependencyResolvable {
     public static let shared: DIContainer = .init()
     
-    private var cache: [String: Any] = [:]
+    private var cache: [CacheKey: Any] = [:]
     
-    public func resolve<T>(_ type: T.Type) -> T {
+    public func resolve<T>(_ type: T.Type, qualifier: String? = nil) -> T {
         self.queue.sync {
             let key = self.cacheKey(type)
             if let cached = self.cache[key], let transformed = cached as? T {
                 return transformed
             }
             
-            let targets = self.allComponentableInstances.compactMap { $0 as? T }
+            let targets = self.allComponentableInstances
+                .compactMap { $0 as? T }
+                .filter { candidate in
+                    guard let qualifier = qualifier else {
+                        return true
+                    }
+                    guard let qualifiable = candidate as? Qualifiable else {
+                        return false
+                    }
+                    return qualifiable._qualifier == qualifier
+                }
             
             if let target = targets.first {
                 self.cache[key] = target
@@ -49,8 +59,18 @@ public final class DIContainer: DependencyResolvable {
         return initicated
     }()
     
-    private func cacheKey<T>(_ type: T.Type) -> String {
-        String(describing: type)
+    private struct CacheKey: Hashable {
+        let type: String
+        let qualifier: String?
+        
+        init<T>(type: T.Type, qualifier: String?) {
+            self.type = String(describing: type)
+            self.qualifier = qualifier
+        }
+    }
+    
+    private func cacheKey<T>(_ type: T.Type, qualifier: String? = nil) -> CacheKey {
+        CacheKey(type: type, qualifier: qualifier)
     }
     
     private func getAllClassesInTarget() -> [AnyClass] {
@@ -74,5 +94,5 @@ public final class DIContainer: DependencyResolvable {
 }
 
 public protocol Qualifiable {
-    var qualifiable: String { get }
+    var _qualifier: String { get }
 }

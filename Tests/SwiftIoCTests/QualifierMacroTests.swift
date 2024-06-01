@@ -21,6 +21,7 @@ final class QualifierMacroTests: XCTestCase {
     #if canImport(SwiftIoCMacros)
     let testMacros: [String: Macro.Type] = [
         "Qualifier": QualifierMacro.self,
+        "Qualified": QualifiedMacro.self,
         "Autowired": AutowiredMacro.self,
     ]
     #endif
@@ -66,10 +67,11 @@ final class QualifierMacroTests: XCTestCase {
                 private let myProperty = 1
             
                 init() { }
+            
+                public var _qualifier: String = "Test"
             }
             
             extension TestClass: Qualifiable {
-                var qualifier: String = "Test"
             }
             """#,
             macros: testMacros
@@ -79,12 +81,12 @@ final class QualifierMacroTests: XCTestCase {
         #endif
     }
     
-    func test_autowired_macro_with_qualifier_macro_generates_get_accessor_with_qualifier_parameter() {
+    func test_autowired_macro_with_qualified_macro_generates_get_accessor_with_qualifier_parameter() {
         #if canImport(SwiftIoCMacros)
         assertMacroExpansion(
             #"""
             public final class TestClass {
-                @Qualifier("Test")
+                @Qualified("Test")
                 @Autowired
                 private var someType: Int
             
@@ -109,13 +111,13 @@ final class QualifierMacroTests: XCTestCase {
         #endif
     }
 
-    func test_autowired_macro_with_qualifier_macro_generates_get_accessor_with_qualifier_parameter_reguardless_with_macro_order() {
+    func test_autowired_macro_with_qualified_macro_generates_get_accessor_with_qualifier_parameter_reguardless_with_macro_order() {
         #if canImport(SwiftIoCMacros)
         assertMacroExpansion(
             #"""
             public final class TestClass {
                 @Autowired
-                @Qualifier("Test")
+                @Qualified("Test")
                 private var someType: Int
             
                 public init() { }
@@ -146,7 +148,7 @@ final class QualifierMacroTests: XCTestCase {
             @Qualifier("Test")
             final class TestClass {
                 @Autowired
-                @Qualifier("Test2")
+                @Qualified("Test2")
                 private var someType: Int
 
                 init() { }
@@ -161,10 +163,11 @@ final class QualifierMacroTests: XCTestCase {
                 }
 
                 init() { }
+            
+                public var _qualifier: String = "Test"
             }
             
             extension TestClass: Qualifiable {
-                var qualifier: String = "Test"
             }
             """#,
             macros: testMacros
