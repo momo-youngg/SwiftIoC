@@ -52,18 +52,11 @@ extension ComponentMacro: MemberMacro {
         conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        let isNonFinalClass = {
-            guard let classDeclaration = declaration.as(ClassDeclSyntax.self),
-                  let modifiers = classDeclaration.modifiers.as(DeclModifierListSyntax.self) else {
-                return false
-            }
-            let finalKeywordModifier = modifiers.compactMap { $0.as(DeclModifierSyntax.self) }
-                .filter { $0.name.tokenKind == .keyword(.final) }
-            return finalKeywordModifier.isEmpty
-        }()
         guard let typeModifiers = declaration.modifiers.as(DeclModifierListSyntax.self) else {
             return []
         }
+        
+        // check if access modifier is public
         let publicTypeModifiers = typeModifiers.filter { $0.name.tokenKind == .keyword(.public) }
         guard publicTypeModifiers.isEmpty == false else {
             context.diagnose(Diagnostic(node: node, message: ComponentDiagnostic.notPublicType))
@@ -87,6 +80,17 @@ extension ComponentMacro: MemberMacro {
                 return isParamtersEmpty
             }
         
+        let isNonFinalClass = {
+            guard let classDeclaration = declaration.as(ClassDeclSyntax.self),
+                  let modifiers = classDeclaration.modifiers.as(DeclModifierListSyntax.self) else {
+                return false
+            }
+            let finalKeywordModifier = modifiers.compactMap { $0.as(DeclModifierSyntax.self) }
+                .filter { $0.name.tokenKind == .keyword(.final) }
+            return finalKeywordModifier.isEmpty
+        }()
+        
+        // check if init() is exists already
         guard emptyParameterInitializer.isEmpty == false else {
             let initializer = isNonFinalClass ? Self.requiredInitializer() : Self.initializer()
             return [initializer]
@@ -104,11 +108,13 @@ extension ComponentMacro: MemberMacro {
             return publicModifiers.isEmpty == false
         }
         
+        // check if exist init() is public
         guard publicEmptyParameterInitializer.isEmpty == false else {
             context.diagnose(Diagnostic(node: node, message: ComponentDiagnostic.notPublicInit))
             return []
         }
         
+        // check if exist init() and type has final keyword but no required init()
         if isNonFinalClass {
             let requiredInitializer = publicEmptyParameterInitializer.filter { initializerDeclaration in
                 guard let modifiers = initializerDeclaration.modifiers.as(DeclModifierListSyntax.self) else {
