@@ -40,7 +40,6 @@ public struct AutowiredMacro {
             }
         }
     }
-
 }
 
 extension AutowiredMacro: AccessorMacro {
@@ -49,12 +48,14 @@ extension AutowiredMacro: AccessorMacro {
         providingAccessorsOf declaration: some SwiftSyntax.DeclSyntaxProtocol,
         in context: some SwiftSyntaxMacros.MacroExpansionContext
     ) throws -> [SwiftSyntax.AccessorDeclSyntax] {
-        guard let varDecl = declaration.as(VariableDeclSyntax.self),
-              varDecl.bindingSpecifier.tokenKind == .keyword(.var) else {
+        guard let variableDecl = declaration.as(VariableDeclSyntax.self),
+              variableDecl.bindingSpecifier.tokenKind == .keyword(.var) else {
             context.diagnose(Diagnostic(node: node, message: AutowiredDiagnostic.notVariableProperty))
             return []
         }
-        if let bindings = varDecl.bindings.as(PatternBindingListSyntax.self) {
+        
+        if let bindings = variableDecl.bindings.as(PatternBindingListSyntax.self) {
+            // equal must not exist
             let equalBinding = bindings.compactMap { $0.as(PatternBindingSyntax.self) }
                 .filter { patternBindingSyntax in
                     if let initializer = patternBindingSyntax.initializer?.as(InitializerClauseSyntax.self), initializer.equal.tokenKind == .equal {
@@ -68,6 +69,7 @@ extension AutowiredMacro: AccessorMacro {
                 return []
             }
             
+            // accessor must not exist
             let accessorBlock = bindings
                 .compactMap { $0.as(PatternBindingSyntax.self) }
                 .compactMap { $0.accessorBlock }
@@ -76,6 +78,7 @@ extension AutowiredMacro: AccessorMacro {
                 return []
             }
             
+            // get DIContainer argument name
             let containerArgument: String = {
                 if let arguments = node.arguments?.as(LabeledExprListSyntax.self) {
                     if let containerArgument = arguments
@@ -90,6 +93,7 @@ extension AutowiredMacro: AccessorMacro {
                 return "DIContainer.shared"
             }()
             
+            // get type name
             if let typeName = bindings
                 .compactMap({ $0.as(PatternBindingSyntax.self) })
                 .compactMap({ $0.typeAnnotation })
@@ -99,7 +103,8 @@ extension AutowiredMacro: AccessorMacro {
                 .map({ $0.name })
                 .first {
                 
-                if let qualifier = varDecl
+                // get qualifier if exists
+                if let qualifier = variableDecl
                     .attributes
                     .compactMap({ $0.as(AttributeSyntax.self) })
                     .filter({ $0.attributeName.as(IdentifierTypeSyntax.self)?.name.text == "Qualified" })
@@ -111,11 +116,13 @@ extension AutowiredMacro: AccessorMacro {
                     .flatMap({ $0.segments })
                     .compactMap({ $0.as(StringSegmentSyntax.self) })
                     .map({ $0.content.text }).first {
+                    // inject with qualifier
                     let newExpr = AccessorDeclSyntax(accessorSpecifier: .keyword(.get)) {
                         "\(raw: containerArgument).resolve(\(typeName.trimmed).self, qualifier: \"\(raw: qualifier)\")"
                     }
                     return [newExpr]
                 } else {
+                    // inject without qualifier
                     let newExpr = AccessorDeclSyntax(accessorSpecifier: .keyword(.get)) {
                         "\(raw: containerArgument).resolve(\(typeName.trimmed).self)"
                     }
