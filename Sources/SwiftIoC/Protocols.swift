@@ -12,7 +12,7 @@ import Foundation
 }
 
 public protocol DependencyResolvable {
-    func resolve<T: Componentable>(_ type: T.Type, qualifier: String?) -> T
+    func resolve<T>(_ type: T.Type, qualifier: String?) -> T
 }
 
 public protocol Qualifiable {
