@@ -4,7 +4,7 @@ SwiftIoC is a Dependency Injection (DI) container for Swift, inspired by Spring 
 ## Features
 - Automatic dependency registration using `@Component` macro
 - Automatic dependency injection using `@Autowired` macro
-- Support for qualifiers with @Qualifier and `@Qualified` macros
+- Support for qualifiers with `@Qualifier` and `@Qualified` macros
 - Simple and clean API
 
 ## Installation
